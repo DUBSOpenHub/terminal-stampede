@@ -1,74 +1,95 @@
 # 🦬 Terminal Stampede
 
-**⚡ 8 AI agents. One terminal. All at once.**
+**One terminal. Eight AI agents. All running at the same time.**
 
-<!-- TODO: Replace with actual demo GIF after recording -->
-<!-- ![Terminal Stampede Demo](docs/stampede-demo.gif) -->
+You've been doing AI coding one task at a time. Ask, wait, ask again, wait again. Terminal Stampede splits your terminal into 8 panes, drops an AI agent into each one, and lets them all charge through your codebase simultaneously. Each agent gets its own brain, its own branch, its own mission. You watch them work in real time through the gold ⚡ borders. Five minutes later, everything's done.
 
-```
-You say:  "stampede 8 workers on ghost-ops"
+📝 **[Read the full story →](BLOG.md)** *"I Split One Terminal Into 8 AI Brains. Here's What Happened."* — How Havoc Hackathon, Shadow Score, Dark Factory, and Agent X-Ray led to this experiment.
 
-What happens:
-  ┌─ ⚡ claude-haiku · Harden watchdog ─┬─ ⚡ claude-haiku · Harden autopilot ─┐
-  │ > Reading portfolio_watchdog.py...   │ > Adding input validation...         │
-  │ > Adding exponential backoff...      │ > Handling malformed issues...        │
-  ├─ ⚡ claude-haiku · Harden sentinel ──┼─ ⚡ claude-haiku · Improve elo_router┤
-  │ > Adding circuit breaker pattern...  │ > Clamping ELO bounds...             │
-  ├─ ⚡ claude-haiku · Improve backend ──┼─ ⚡ claude-haiku · Expand tests ─────┤
-  │ > Atomic write-then-rename...        │ > 23 new test cases added...         │
-  ├─ ⚡ claude-haiku · Improve CLI ──────┼─ 📊 Monitor ────────────────────────┤
-  │ > Better --help output...            │  ✅ Done: 6/8  🔧 Claimed: 2        │
-  └──────────────────────────────────────┴──────────────────────────────────────┘
+---
 
-  8 agents. 8 branches. 5 minutes. Done.
-```
-
-Terminal Stampede splits work across independent AI agents running in parallel tmux panes. Each agent gets its own 200K+ token context window, its own git branch, and a specific task. An orchestrator coordinates through a zero-infrastructure filesystem queue.
-
-## Why this exists
-
-Every multi-agent framework (LangGraph, CrewAI, AutoGen) runs agents as function calls inside a single process. They share one context window, one set of tools, one API connection. When Agent A thinks, Agent B waits.
-
-Terminal Stampede is different. Each agent is a fully independent Copilot CLI session that can read code, edit files, run tests, and iterate — all in its own terminal. True parallelism, not concurrency.
-
-**The key insight:** the CLI *is* the agent runtime. No custom framework needed. Just tmux + copilot + files on disk.
-
-## Architecture
+<!-- Add demo screenshot: run a stampede, take a screenshot of the tmux session, save as docs/stampede-demo.png -->
+<!-- ![Terminal Stampede in action](docs/stampede-demo.png) -->
+<!-- *8 agents working in parallel — monitor pane (left), 3 workers editing code (right)* -->
 
 ```
-┌─────────────────────────────────────────────────┐
-│  Orchestrator (SKILL.md)                        │
-│  Parses intent → generates tasks → launches     │
-│  workers → polls results → synthesizes          │
-└───────────┬─────────────────────────────────────┘
-            │ bash(mode="async", detach=true)
-            ▼
-┌─────────────────────────────────────────────────┐
-│  Launcher (stampede.sh)                         │
-│  Creates tmux session → spawns N panes →        │
-│  captures PIDs → applies tiled layout           │
-└───────┬───────┬───────┬───────┬─────────────────┘
-        │       │       │       │
-        ▼       ▼       ▼       ▼
-     ┌─────┐┌─────┐┌─────┐┌─────┐
-     │  ⚡  ││  ⚡  ││  ⚡  ││  ⚡  │   Workers (agent.md)
-     │  1  ││  2  ││  3  ││  4  │   Each in own tmux pane
-     └──┬──┘└──┬──┘└──┬──┘└──┬──┘   Own context, own branch
-        │      │      │      │
-        ▼      ▼      ▼      ▼
-   ┌─────────────────────────────────┐
-   │  ~/.copilot/stampede/{run_id}   │
-   │  queue/    → tasks waiting      │
-   │  claimed/  → tasks in progress  │
-   │  results/  → completed output   │
-   │  logs/     → worker JSONL logs  │
-   │  pids/     → process liveness   │
-   └─────────────────────────────────┘
+┌─ ⚡ Monitor ──────────────────────┬─ ⚡ claude-haiku · Add error handling ─┐
+│                                    │                                        │
+│  ⚡ STAMPEDE COMMAND CENTER ⚡     │ ● Checkout existing branch              │
+│                                    │   $ git checkout stampede/task-001      │
+│  ████████████░░░░░ 75% (6/8)      │                                        │
+│                                    │ Now let me add retry logic with        │
+│  📦 QUEUE  🔥 ACTIVE  ✅ DONE     │ exponential backoff:                   │
+│     0         2          6         │                                        │
+│                                    │ ● Edit src/api.py (+15 -1)            │
+│  — FLEET —                         │ ● Edit src/api.py (+8 -1)             │
+│  ● W1  haiku-4.5                   │                                        │
+│  ● W2  haiku-4.5                   ├─ ⚡ claude-haiku · Add type hints ────┤
+│  ● W3  haiku-4.5                   │                                        │
+│  ● W4  haiku-4.5                   │ ● Read src/models.py lines 1-100      │
+│                                    │   ↳ 100 lines read                     │
+│  15:01:36 | 6🟢 2🔴 | 6 done     │                                        │
+│                                    │ Let me add type annotations to all     │
+├─ ⚡ claude-haiku · Expand tests ──┤ function signatures:                   │
+│                                    │                                        │
+│ ● Read tests/ directory            │ ● List all function definitions        │
+│   ↳ 4 test files found             │   $ grep -n "^def \|^async def "      │
+│                                    │   ↳ 19 lines...                        │
+│ Writing comprehensive edge case    │                                        │
+│ tests for the auth module:         │ Now let me create a work branch and    │
+│                                    │ add type hints to all files:           │
+│ ● Edit tests/test_auth.py (+23 -1) │                                        │
+└────────────────────────────────────┴────────────────────────────────────────┘
 ```
 
-**IPC is pure filesystem.** No Redis, no HTTP, no databases. Workers claim tasks by atomically renaming files. Results are written via atomic rename. Race-safe by POSIX guarantees.
+> ⚡ **Get started fast!**
+> ```bash
+> git clone https://github.com/DUBSOpenHub/terminal-stampede.git
+> cd terminal-stampede && chmod +x install.sh && ./install.sh
+> ```
 
-## Quick start
+---
+
+## 💡 The Problem
+
+You're a developer. Monday morning. Your codebase needs error handling added to 4 modules, test coverage expanded, docs updated, and the CLI cleaned up. That's 8 tasks.
+
+**Without Terminal Stampede:** You open Copilot, ask it to fix the first module. Wait 5 minutes. Ask for the second. Wait. Third. Wait. An hour later you're halfway done and you've context-switched six times.
+
+**With Terminal Stampede:** You run one command. Eight panes open. Eight agents start working on all eight tasks at the same time. You grab coffee. When you come back, 8 branches are ready for review. Same work. Same quality. Five minutes instead of forty.
+
+| | One agent at a time | Terminal Stampede |
+|---|---|---|
+| 8 tasks | ~40 minutes | ~5 minutes |
+| Context windows | 200K tokens (shared) | 1.6M tokens (8 x 200K) |
+| Git branches | 1 (sequential) | 8 (parallel, isolated) |
+| Your involvement | Babysit each task | Start it and walk away |
+| Cost | ~$2 | ~$2 (same tokens, just parallel) |
+
+The cost doesn't go up. The time goes down. That's the whole value.
+
+---
+
+## 🤔 What Is This?
+
+Every multi-agent framework out there (LangGraph, CrewAI, AutoGen) runs agents as function calls inside one process. They share one brain. When Agent A is thinking, Agent B waits.
+
+Terminal Stampede does something different. Each agent is a fully independent [Copilot CLI](https://docs.github.com/copilot/concepts/agents/about-copilot-cli) session running in its own tmux pane with its own 200K token context. It can read code, edit files, run tests, see failures, and fix them. No other agent is competing for its attention.
+
+The "message queue" is just files on disk. The "orchestrator" is just a Copilot skill. The "agent runtime" is just your terminal. Point it at any repo.
+
+Nobody else has built this for Copilot CLI.
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- macOS or Linux
+- `tmux` (`brew install tmux`)
+- `gh copilot` (GitHub Copilot CLI extension)
+- `python3`, `jq`, `openssl`, `git`
 
 ### Install
 
@@ -78,62 +99,65 @@ cd terminal-stampede
 chmod +x install.sh && ./install.sh
 ```
 
-This copies three files to their working locations:
-- `~/.copilot/skills/stampede/SKILL.md` — orchestrator skill
-- `~/.copilot/agents/stampede-worker.agent.md` — worker agent
-- `~/bin/stampede.sh` — launcher script
+Three files land in their working locations:
 
-### Prerequisites
-
-- macOS or Linux
-- `tmux` (`brew install tmux`)
-- `gh copilot` (GitHub Copilot CLI extension)
-- `python3`, `jq`, `openssl`, `git`
+| File | Location | Purpose |
+|------|----------|---------|
+| Orchestrator skill | `~/.copilot/skills/stampede/SKILL.md` | Parses commands, generates tasks, monitors, synthesizes |
+| Worker agent | `~/.copilot/agents/stampede-worker.agent.md` | Claims tasks, does the work, writes results |
+| Launcher | `~/bin/stampede.sh` | Creates tmux session, spawns panes, tracks PIDs |
 
 ### Run
 
 ```bash
-stampede.sh --run-id run-20260301-120000 --count 8 --repo ~/my-project --model claude-haiku-4.5
+stampede.sh --run-id run-20260301-120000 --count 8 --repo ~/your-project --model claude-haiku-4.5
 ```
 
-A Terminal window opens with 8 tiled panes + a live monitor. Each pane border shows `⚡ model · task name` in gold. Agents claim tasks, work independently, and drop results when done.
+A Terminal window opens. Eight panes tile across the screen. Gold ⚡ borders show the model and task for each agent. A monitor pane tracks progress in real time. You watch them work.
 
-## The three files
+---
 
-### `skills/SKILL.md` — Orchestrator
+## 🗺️ How It Works
 
-Copilot CLI skill that coordinates the lifecycle:
-- Parses natural language (`"stampede 6 workers on my-repo"`)
-- Gathers repo context (README, file tree, test command)
-- Generates non-overlapping task manifests
-- Launches workers via the launcher script
-- Polls for results with progress bar
-- Detects dead workers via PID checks
-- Re-queues orphaned tasks with generation counter
-- Synthesizes results with file conflict detection
-- Crash recovery via `stampede resume`
+Think of a deli counter. Tasks are tickets on the wall. Agents grab one at a time.
 
-### `agents/stampede-worker.agent.md` — Worker
+### Task claiming (race-safe)
 
-Autonomous agent loaded per-session via `--agent stampede-worker`:
-- Claims tasks atomically from the filesystem queue
-- Creates isolated git branch per task
-- Executes real code work (reads, edits, tests)
-- Writes results via atomic rename
-- Logs to JSONL for orchestrator visibility
-- Loops through available tasks, exits when queue empty
+```
+Agent A: mv queue/task-001.json claimed/task-001.json  ← succeeds
+Agent B: mv queue/task-001.json claimed/task-001.json  ← file gone, tries next
+```
 
-### `bin/stampede.sh` — Launcher
+No locks. No database. Just filesystem rename — atomic by POSIX guarantee.
 
-The bridge between orchestrator and workers:
-- Validates 8 prerequisites
-- Creates tmux session with tiled panes + live monitor
-- Gold ⚡ pane borders with model + task labels
-- PID capture via process tree walking
-- Auto-opens Terminal window
-- `--teardown` mode for cleanup
+### Each agent works alone
 
-## Usage
+1. Claim a task (atomic `mv`)
+2. Create git branch: `stampede/task-001`
+3. Read the code, make improvements, run tests
+4. Write result file (atomic: `.tmp-` then `mv`)
+5. Claim next task or exit
+
+### The orchestrator watches
+
+```
+⚙️ [████████████████░░░░] 75% (6/8) | alive=8 dead=0
+```
+
+If an agent dies mid-task, the orchestrator detects it via PID check, re-queues the task, and another agent picks it up.
+
+### Conflict detection
+
+When all results are in, the orchestrator checks if any two agents modified the same file:
+
+```
+⚠️ CONFLICT: lib/state.py modified by task-001 and task-003
+✅ No conflicts on remaining 6 branches — ready to merge
+```
+
+---
+
+## 🏇 Usage
 
 ```
 stampede.sh --run-id <id> --count <n> --repo <path> [--model <model>]
@@ -142,73 +166,80 @@ stampede.sh --teardown --run-id <id>
 Options:
   --run-id      Run identifier (format: run-YYYYMMDD-HHMMSS)
   --count       Number of agents (1-20, sweet spot: 6-8)
-  --repo        Path to git repository
+  --repo        Path to any git repository
   --model       AI model (default: claude-haiku-4.5)
-  --teardown    Kill agents and clean up
-  --no-attach   Don't auto-open Terminal (for skill-driven launches)
+  --teardown    Kill agents, clean up
+  --no-attach   Don't auto-open Terminal window
 ```
 
-## Tmux navigation
+## 🎮 Tmux Navigation
 
-| Key | Action |
-|-----|--------|
+| Key | What it does |
+|-----|-------------|
 | `tmux attach -t stampede-{run_id}` | Attach to the fleet |
 | `Ctrl-B z` | Zoom one pane full screen |
-| `Ctrl-B z` | Zoom back out |
+| `Ctrl-B z` again | Zoom back out to the grid |
 | `Ctrl-B arrow` | Move between panes |
 | `Ctrl-B d` | Detach (agents keep running) |
 
-## How it works
+---
 
-### Task claiming (race-safe)
-
-```
-Worker A: mv queue/task-001.json claimed/task-001.json  ← succeeds
-Worker B: mv queue/task-001.json claimed/task-001.json  ← ENOENT (file gone)
-Worker B tries next task  ← no locks, no coordination
-```
-
-### Dead worker recovery
+## 🏗️ Architecture
 
 ```
-Orchestrator: kill -0 $PID  →  alive? skip
-              kill -0 $PID  →  dead?
-                → re-queue task with generation++
-                → if generation > 2: mark failed
+┌─────────────────────────────────────────────────┐
+│  Orchestrator (SKILL.md)                        │
+│  Parses intent → generates tasks → launches     │
+│  workers → polls results → synthesizes          │
+└───────────┬─────────────────────────────────────┘
+            │
+            ▼
+┌─────────────────────────────────────────────────┐
+│  Launcher (stampede.sh)                         │
+│  tmux session → N panes → PID tracking          │
+└───────┬───────┬───────┬───────┬─────────────────┘
+        ▼       ▼       ▼       ▼
+     ┌─────┐┌─────┐┌─────┐┌─────┐
+     │  ⚡  ││  ⚡  ││  ⚡  ││  ⚡  │  Each agent: own terminal,
+     │     ││     ││     ││     │  own 200K context, own branch
+     └──┬──┘└──┬──┘└──┬──┘└──┬──┘
+        │      │      │      │
+        ▼      ▼      ▼      ▼
+   ┌─────────────────────────────────┐
+   │  ~/.copilot/stampede/{run_id}/  │
+   │  queue/ → claimed/ → results/  │
+   └─────────────────────────────────┘
 ```
 
-### Conflict detection
+**Zero infrastructure.** No Redis, no HTTP, no Docker, no cloud. Just files on disk and tmux.
 
-```
-task-001 modified: lib/state.py, missions/sentinel.py
-task-003 modified: lib/state.py, lib/elo_router.py
-⚠️ CONFLICT: lib/state.py modified by task-001 and task-003
-```
-
-## The numbers
-
-- **8 agents** = 1.6M tokens of parallel context
-- **5 minutes** instead of 40 for the same work
-- **~$2** for an 8-agent sweep with Haiku
-- **Zero infrastructure** — tmux + copilot + filesystem
-
-## Design decisions
+## 🧠 Design Decisions
 
 | Decision | Why |
 |----------|-----|
-| Filesystem over database for IPC | Simpler, no dependencies, `ls queue/` to debug |
+| Filesystem as message queue | Simpler than anything else. `ls queue/` is your debugger |
 | Agent for workers, skill for orchestrator | Skills load globally, agents load per-session. Clean role isolation |
-| Branch per task | No two agents commit to main. Conflicts detected at synthesis |
-| 500-word result cap | Orchestrator context is precious |
-| `--max-autopilot-continues 30` | Prevents runaway agents burning quota |
-| Cheap models for workers | Haiku at ~$0.25/task. Expensive model only for synthesis |
+| Branch per task | No two agents touch main. Conflicts caught at synthesis |
+| 500-word result cap | 8 verbose summaries would blow the orchestrator's context |
+| `--max-autopilot-continues 30` | Prevents runaway agents from burning unlimited quota |
+| Cheap models for grunt work | Haiku at ~$0.25/task. Save the expensive model for synthesis |
 
-## Origin
+---
 
-Built during [Havoc Hackathon #37](https://github.com/DUBSOpenHub/havoc-hackathon), where 8 AI models competed to design this framework across 2 elimination rounds. The winning architecture was synthesized from Claude Opus 4.6 (Fast) and GPT-5.3-Codex, then battle-tested with live dispatches on [ghost-ops](https://github.com/DUBSOpenHub/ghost-ops).
+## 🦬 Origin
 
-Read the full story: [What happens when you give AI agents their own terminals?](docs/story.md)
+Built during [Havoc Hackathon #37](https://github.com/DUBSOpenHub/havoc-hackathon), where 8 AI models competed to design this framework across 2 elimination rounds with sealed judging. The winning architecture was synthesized from Claude Opus 4.6 (Fast) and GPT-5.3-Codex, then battle-tested with live stampedes on real codebases.
 
-## License
+**Read the full story:** [I Split One Terminal Into 8 AI Brains. Here's What Happened. →](BLOG.md)
 
-MIT
+## 📄 License
+
+[MIT](LICENSE) — use it, fork it, stampede with it. 🦬
+
+---
+
+## 🐙 Built with Love
+
+Created with 💜 by [DUBSOpenHub](https://github.com/DUBSOpenHub) to help more people discover the joy of GitHub Copilot CLI.
+
+**Let's build!** 🚀✨
