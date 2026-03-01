@@ -2,7 +2,7 @@
 
 **One terminal. Eight AI agents. All running at the same time.**
 
-You've been doing AI coding one task at a time. Ask, wait, ask again, wait again. Terminal Stampede splits your terminal into 8 panes, drops an AI agent into each one, and lets them all charge through your codebase simultaneously. Each agent gets its own brain, its own branch, its own mission. You watch them work in real time through the gold ⚡ borders. Five minutes later, everything's done.
+You've been doing AI coding one task at a time. Ask, wait, ask again, wait again. Terminal Stampede splits your terminal into 8 panes, drops an AI agent into each one, and lets them all charge through your codebase simultaneously. Each agent gets its own brain, its own branch, its own mission. You watch them work in real time through the gold ⚡ borders. Minutes later, everything's done.
 
 📝 **[Read the full story →](BLOG.md)** *"I Split One Terminal Into 8 AI Brains. Here's What Happened."* — How Havoc Hackathon, Shadow Score, Dark Factory, and Agent X-Ray led to this experiment.
 
@@ -54,19 +54,19 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 You're a developer. Monday morning. Your codebase needs error handling added to 4 modules, test coverage expanded, docs updated, and the CLI cleaned up. That's 8 tasks.
 
-**Without Terminal Stampede:** You open Copilot, ask it to fix the first module. Wait 5 minutes. Ask for the second. Wait. Third. Wait. An hour later you're halfway done and you've context-switched six times.
+**Without Terminal Stampede:** You open Copilot, ask it to fix the first module. Wait a few minutes. Ask for the second. Wait. Third. Wait. You're context-switching between tasks and losing momentum.
 
-**With Terminal Stampede:** You run one command. Eight panes open. Eight agents start working on all eight tasks at the same time. You grab coffee. When you come back, 8 branches are ready for review. Same work. Same quality. Five minutes instead of forty.
+**With Terminal Stampede:** You run one command. Eight panes open. Eight agents start working on all eight tasks at the same time. You grab coffee. When you come back, 8 branches are ready for review. Same work. Same quality. Parallel instead of serial.
 
 | | One agent at a time | Terminal Stampede |
 |---|---|---|
-| 8 tasks | ~40 minutes | ~5 minutes |
+| 8 tasks | ~30-40 minutes | ~3-5 minutes |
 | Context windows | 200K tokens (shared) | 1.6M tokens (8 x 200K) |
 | Git branches | 1 (sequential) | 8 (parallel, isolated) |
 | Your involvement | Babysit each task | Start it and walk away |
 | Cost | ~$2 | ~$2 (same tokens, just parallel) |
 
-The cost doesn't go up. The time goes down. That's the whole value.
+The cost doesn't go up. The time drops dramatically. That's the whole value.
 
 ---
 
@@ -77,8 +77,6 @@ Every multi-agent framework out there (LangGraph, CrewAI, AutoGen) runs agents a
 Terminal Stampede does something different. Each agent is a fully independent [Copilot CLI](https://docs.github.com/copilot/concepts/agents/about-copilot-cli) session running in its own tmux pane with its own 200K token context. It can read code, edit files, run tests, see failures, and fix them. No other agent is competing for its attention.
 
 The "message queue" is just files on disk. The "orchestrator" is just a Copilot skill. The "agent runtime" is just your terminal. Point it at any repo.
-
-Nobody else has built this for Copilot CLI.
 
 ---
 
