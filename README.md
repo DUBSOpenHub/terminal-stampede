@@ -23,14 +23,14 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 You're a developer. Monday morning. Your codebase needs error handling added to 4 modules, test coverage expanded, docs updated, and the CLI cleaned up. That's 8 tasks.
 
-**Without Terminal Stampede:** You open Copilot, ask it to fix the first module. Wait a few minutes. Ask for the second. Wait. Third. Wait. You're context-switching between tasks and losing momentum.
+Today, you work through them one at a time. Ask Copilot for the first task. Wait. Ask for the second. Wait. Context-switch. Lose momentum. Some tasks take a minute, some take ten, but you're stuck in a queue of your own making.
 
-**With Terminal Stampede:** You run one command. Eight panes open. Eight agents start working on all eight tasks at the same time. You grab coffee. When you come back, 8 branches are ready for review. Same work. Same quality. Parallel instead of serial.
+Terminal Stampede runs them all at once. One command, eight panes, eight agents working in parallel on their own git branches. Instead of feeding tasks one by one, you define the batch and let them run. Your development time scales with the longest single task, not the sum of all of them.
 
-| | One agent at a time | Terminal Stampede |
+| | Sequential | Parallel (Stampede) |
 |---|---|---|
-| 8 tasks | ~30-40 minutes | ~3-5 minutes |
-| Context windows | 200K tokens (shared) | 1.6M tokens (8 x 200K) |
+| Workflow | One task at a time | All tasks at once |
+| Context windows | 200K tokens (shared) | 1.6M tokens (8 × 200K) |
 | Git branches | 1 (sequential) | 8 (parallel, isolated) |
 | Your involvement | Babysit each task | Start it and walk away |
 
