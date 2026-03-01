@@ -8,39 +8,8 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 ---
 
-<!-- Add demo screenshot: run a stampede, take a screenshot of the tmux session, save as docs/stampede-demo.png -->
-<!-- ![Terminal Stampede in action](docs/stampede-demo.png) -->
-<!-- *8 agents working in parallel — monitor pane (left), 3 workers editing code (right)* -->
-
-```
-┌─ ⚡ Monitor ──────────────────────┬─ ⚡ claude-haiku · Add error handling ─┐
-│                                    │                                        │
-│  ⚡ STAMPEDE COMMAND CENTER ⚡     │ ● Checkout existing branch              │
-│                                    │   $ git checkout stampede/task-001      │
-│  ████████████░░░░░ 75% (6/8)      │                                        │
-│                                    │ Now let me add retry logic with        │
-│  📦 QUEUE  🔥 ACTIVE  ✅ DONE     │ exponential backoff:                   │
-│     0         2          6         │                                        │
-│                                    │ ● Edit src/api.py (+15 -1)            │
-│  — FLEET —                         │ ● Edit src/api.py (+8 -1)             │
-│  ● W1  haiku-4.5                   │                                        │
-│  ● W2  haiku-4.5                   ├─ ⚡ claude-haiku · Add type hints ────┤
-│  ● W3  haiku-4.5                   │                                        │
-│  ● W4  haiku-4.5                   │ ● Read src/models.py lines 1-100      │
-│                                    │   ↳ 100 lines read                     │
-│  15:01:36 | 6🟢 2🔴 | 6 done     │                                        │
-│                                    │ Let me add type annotations to all     │
-├─ ⚡ claude-haiku · Expand tests ──┤ function signatures:                   │
-│                                    │                                        │
-│ ● Read tests/ directory            │ ● List all function definitions        │
-│   ↳ 4 test files found             │   $ grep -n "^def \|^async def "      │
-│                                    │   ↳ 19 lines...                        │
-│ Writing comprehensive edge case    │                                        │
-│ tests for the auth module:         │ Now let me create a work branch and    │
-│                                    │ add type hints to all files:           │
-│ ● Edit tests/test_auth.py (+23 -1) │                                        │
-└────────────────────────────────────┴────────────────────────────────────────┘
-```
+![Terminal Stampede in action](docs/stampede-demo.png)
+*Monitor pane tracking fleet progress, workers editing code in parallel*
 
 > ⚡ **Get started fast!**
 > ```bash
@@ -64,9 +33,6 @@ You're a developer. Monday morning. Your codebase needs error handling added to 
 | Context windows | 200K tokens (shared) | 1.6M tokens (8 x 200K) |
 | Git branches | 1 (sequential) | 8 (parallel, isolated) |
 | Your involvement | Babysit each task | Start it and walk away |
-| Cost | ~$2 | ~$2 (same tokens, just parallel) |
-
-The cost doesn't go up. The time drops dramatically. That's the whole value.
 
 ---
 
@@ -220,7 +186,7 @@ Options:
 | Branch per task | No two agents touch main. Conflicts caught at synthesis |
 | 500-word result cap | 8 verbose summaries would blow the orchestrator's context |
 | `--max-autopilot-continues 30` | Prevents runaway agents from burning unlimited quota |
-| Cheap models for grunt work | Haiku at ~$0.25/task. Save the expensive model for synthesis |
+| Lightweight models for grunt work | Save the powerful model for synthesis, use fast ones for parallel tasks |
 
 ---
 
