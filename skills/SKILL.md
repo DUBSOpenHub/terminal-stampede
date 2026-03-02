@@ -306,6 +306,70 @@ with open(f"{base}/state.json", "w") as f:
 
 ---
 
+## STEP 5.5 — SEALED-ENVELOPE TEST GENERATION (Shadow Score)
+
+Before launching agents, generate sealed tests from the task specifications using the
+[Shadow Score protocol](https://github.com/DUBSOpenHub/shadow-score-spec). These tests
+are hidden from agents and run after merge to measure blind spots.
+
+**Principle:** The agents never see these tests. They write their own tests for their own
+code. The sealed tests measure: "Did the agent actually satisfy the requirement, or just
+write code that passes its own tests?"
+
+### Generate sealed tests
+
+For each task manifest, use a separate `task` agent call (context-isolated from the
+worker agents) to generate specification-based tests:
+
+```python
+python3 -c '
+import json, os
+
+base = "THE_BASE_DIR"
+sealed_dir = os.path.join(base, "sealed-tests")
+os.makedirs(sealed_dir, exist_ok=True)
+
+# Read each task manifest
+queue_dir = os.path.join(base, "queue")
+for qf in sorted(os.listdir(queue_dir)):
+    if not qf.endswith(".json"): continue
+    with open(os.path.join(queue_dir, qf)) as f:
+        task = json.load(f)
+    print(f"SEAL: {task[\"task_id\"]} — {task.get(\"title\", task.get(\"objective\", \"\")[:60])}")
+'
+```
+
+For each task, dispatch a `task` agent (explore type) with this prompt:
+
+> You are a Seal Author for the Shadow Score protocol. Given this task specification,
+> generate 3-5 acceptance tests that verify the REQUIREMENTS, not implementation details.
+>
+> Task: {task_title}
+> Objective: {task_objective}
+> Scope files: {task_files}
+>
+> Write tests as a shell script that exits 0 on pass, non-zero on fail.
+> Each test should check ONE requirement. Output the test script only.
+
+Save each sealed test to `{base}/sealed-tests/{task_id}.sh`. Make them executable.
+
+### Hash the sealed envelope
+
+After generating all sealed tests, compute a tamper-evidence hash:
+
+```bash
+find THE_BASE_DIR/sealed-tests -name "*.sh" -exec sha256sum {} \; | sort | sha256sum > THE_BASE_DIR/sealed-tests/.seal-hash
+```
+
+Store the hash in state.json so it can be verified later — proving tests weren't modified
+after agents started working.
+
+**Important:** Do NOT share sealed test contents with agents. The worker agent prompt
+must never reference `sealed-tests/`. Only share failure messages (not test source)
+during hardening.
+
+---
+
 ## STEP 6 — LAUNCH AGENTS
 
 Invoke the launcher with `bash(mode="async", detach=true)` and `--no-attach` (the skill handles window opening): <!-- Landmine #21 -->
