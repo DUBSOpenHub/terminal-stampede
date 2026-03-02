@@ -9,6 +9,8 @@ PIDS_DIR="$BASE/pids"
 TOTAL_TASKS=$(find "$BASE/queue" "$BASE/claimed" "$BASE/results" -name "*.json" -not -name ".tmp-*" -type f 2>/dev/null | wc -l | tr -d ' ')
 STUCK_THRESHOLD=180  # seconds without progress = stuck
 BELL=$'\a'
+ALERTED_FILE="$BASE/.alerted"  # track which agents already belled
+touch "$ALERTED_FILE" 2>/dev/null || true
 
 declare -A LAST_ACTIVITY 2>/dev/null || true  # bash 3 fallback
 
@@ -141,8 +143,15 @@ while true; do
             fi
             
             if [[ $pid_age -gt $STUCK_THRESHOLD ]] && [[ $claimed -gt 0 ]]; then
-                printf "    \033[1;31m🔴 $wid (PID $wpid) — STUCK (%ds) ⚠️  May need help!\033[0m\n" "$pid_age"
-                printf "$BELL"  # Terminal bell
+                printf "    \033[1;31m┌──────────────────────────────────────────┐\033[0m\n"
+                printf "    \033[1;31m│ 🔴 $wid (PID $wpid) — STUCK (%ds) ⚠️   │\033[0m\n" "$pid_age"
+                printf "    \033[1;31m│     May need help! Ctrl-B z to zoom     │\033[0m\n"
+                printf "    \033[1;31m└──────────────────────────────────────────┘\033[0m\n"
+                # Bell once per stuck agent, not every loop
+                if ! grep -q "^${wid}$" "$ALERTED_FILE" 2>/dev/null; then
+                    printf "$BELL"
+                    echo "$wid" >> "$ALERTED_FILE"
+                fi
                 stuck_found=true
             else
                 printf "    \033[32m🟢 $wid (PID $wpid) — working\033[0m\n"
