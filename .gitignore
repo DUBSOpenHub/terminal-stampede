@@ -10,3 +10,6 @@ __pycache__/
 
 # Swift build artifacts
 ui/macos/.build/
+
+# Swift build artifacts
+ui/macos/.build/

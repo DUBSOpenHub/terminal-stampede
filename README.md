@@ -196,6 +196,35 @@ Options:
 
 ---
 
+## 📊 Real Run: What Actually Happened
+
+One stampede, 8 agents, pointed at [ghost-ops](https://github.com/DUBSOpenHub/ghost-ops). No cherry-picking — these are the raw numbers from a single run.
+
+| | Result |
+|---|---|
+| Tasks | 8 |
+| Agents | 8 (claude-haiku-4.5) |
+| Success rate | 8/8 — zero failures |
+| Coordination failures | 0 — filesystem queue, no server |
+| Code changes | +1,812 / -310 lines |
+
+**Per-task breakdown:**
+
+| Task | Time | Changes |
+|------|------|---------|
+| Type annotations | 3.4m | already complete |
+| Input validation | 3.7m | +72 -4 |
+| Error handling | 4.1m | +120 -28 |
+| CLI help | 4.5m | +113 -2 |
+| Test coverage | 5.6m | +297 -4 |
+| Docstrings | 32.3m | +570 -48 |
+| ELO router errors | 48.5m | +394 -152 |
+| State refactor | 83.0m | +246 -72 |
+
+6 of 8 tasks finished in under 6 minutes. Two complex tasks took longer — but they ran at the same time as everything else. Sequentially, you'd wait through all of them one by one. In parallel, you walk away and come back to everything done.
+
+---
+
 ## 🦬 Origin
 
 Built during a [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon), where 8 AI models competed to design this framework across 2 elimination rounds with sealed judging. The winning architecture was synthesized from Claude Opus 4.6 (Fast) and GPT-5.3-Codex, then battle-tested with live stampedes on real codebases.
