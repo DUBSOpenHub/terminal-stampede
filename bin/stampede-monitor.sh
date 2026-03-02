@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck shell=bash
 # stampede-monitor.sh — Live monitor for Terminal Stampede runs
 # Shows progress, alerts on stuck agents, celebrates completion.
 set -euo pipefail
