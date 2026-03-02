@@ -22,7 +22,7 @@ Dark Factory builds things, but how do you know the agents themselves are well-c
 
 ## The "what if" moment
 
-But Havoc Hackathon has a constraint: every contestant runs inside the same Copilot CLI session. They share one context window. The orchestrator launches them as sub-agents, waits for each one, scores them. It's concurrent but not parallel. Model 5 waits while Model 4 thinks.
+But Havoc Hackathon has a constraint: every contestant runs as a sub-agent inside the same session. The orchestrator dispatches them, collects results, and scores them. They each get their own context, but they're managed processes — the orchestrator is the bottleneck, and contestants can't interact with the repo the way a real developer would (reading files, editing code, running tests, iterating on failures).
 
 I was watching Hackathon #37 run — 8 models competing to build a multi-agent framework (meta, I know) — and I thought: what if each contestant had its own terminal? Not a sub-agent sharing my context, but a completely independent Copilot session with its own 200K tokens of working memory, its own tool access, its own ability to read files, edit code, and run tests.
 
@@ -49,9 +49,9 @@ The first few launches were rough. Workers would start but not claim tasks. The 
 
 Each failure mode had the same fix: keep it simple. PID checks instead of heartbeats. Generation counters instead of dedup logic. Atomic file renames instead of lock files. Every time I reached for complexity, the filesystem already had the answer.
 
-The moment it clicked: I launched 8 agents on [ghost-ops](https://github.com/DUBSOpenHub/ghost-ops), my autonomous daemon project. Eight panes lit up, each with a gold ⚡ border showing the model and task. One agent was adding error handling to the watchdog module. Another was writing integration tests. Another was improving the ELO router. All simultaneously. All on their own git branches. All finishing in about 5 minutes.
+The moment it clicked: I launched 8 agents on [ghost-ops](https://github.com/DUBSOpenHub/ghost-ops), my autonomous daemon project. Eight panes lit up, each with a gold ⚡ border showing the model and task. One agent was adding error handling to the watchdog module. Another was writing integration tests. Another was improving the ELO router. All simultaneously. All on their own git branches. All finishing while I watched.
 
-A single session doing the same work would have taken 30-40 minutes.
+Doing those same tasks one at a time would have meant sitting through each one sequentially, context-switching between them, losing momentum. Instead, every task ran in parallel and my wait time was just the longest single task, not the sum of all of them.
 
 ## What this connects to
 

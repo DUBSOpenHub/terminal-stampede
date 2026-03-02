@@ -8,8 +8,8 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 ---
 
-![Terminal Stampede in action](docs/stampede-demo.png)
-*Monitor pane tracking fleet progress, workers editing code in parallel*
+![Terminal Stampede in action](docs/stampede-demo.gif)
+*8 agents working in parallel — monitor pane tracking progress, workers editing code across the codebase*
 
 > ⚡ **Get started fast!**
 > ```bash
