@@ -269,6 +269,28 @@ if os.path.exists(fleet_path):
     with open(fleet_path) as f:
         fleet = json.load(f)
 
+# Build model lookup: worker_id → model
+# Fleet uses worker-1, worker-2 etc but agents self-assign random IDs.
+# Also check state.json for the default model.
+default_model = "unknown"
+state_path = os.path.join(base, "state.json")
+if os.path.exists(state_path):
+    with open(state_path) as f:
+        state = json.load(f)
+    default_model = state.get("model", "unknown")
+
+# Map slot-based worker IDs to models
+fleet_models = {}
+for wid, info in fleet.items():
+    fleet_models[wid] = info.get("model", default_model)
+
+def get_model_for_worker(worker_id):
+    """Resolve model from fleet, falling back to slot matching or default."""
+    if worker_id in fleet_models:
+        return fleet_models[worker_id]
+    # Try matching by slot number (worker-abc123 → can't match, use default)
+    return default_model
+
 # Load runtime stats (Layer 1)
 runtime = {"agents": {}}
 rt_path = os.path.join(base, "runtime-stats.json")
@@ -306,7 +328,7 @@ for i, branch in enumerate(sorted_branches):
     conflicts = conflict_counts[i] if i < len(conflict_counts) else 0
     result = results_map.get(branch, {})
     wid = result.get("worker_id", "")
-    model = fleet.get(wid, {}).get("model", "unknown")
+    model = get_model_for_worker(wid)
     tid = result.get("task_id", branch.split("/")[-1])
     rt = runtime.get("agents", {}).get(wid, {})
 
