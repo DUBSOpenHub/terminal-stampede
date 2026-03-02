@@ -50,16 +50,15 @@ echo "  ✅ Demo → $BIN_DIR/stampede-demo"
 
 # Check ~/bin is in PATH
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
-    echo ""
-    echo "  ⚠️  ~/bin is not in your PATH. Add it:"
-    echo "     echo 'export PATH=\"\$HOME/bin:\$PATH\"' >> ~/.zshrc"
+    export PATH="$HOME/bin:$PATH"
 fi
 
 echo ""
 echo "🦬 Terminal Stampede installed!"
 echo ""
-echo "  Usage:"
-echo "    stampede.sh --run-id run-YYYYMMDD-HHMMSS --count 8 --repo ~/your-project"
+echo "  Launching demo..."
 echo ""
-echo "  Or in a Copilot CLI session:"
-echo "    stampede 8 agents on ~/your-project"
+sleep 1
+
+# Auto-launch the demo
+exec "$BIN_DIR/stampede-demo"

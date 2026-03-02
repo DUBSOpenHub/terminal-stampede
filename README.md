@@ -26,7 +26,7 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 > 🦬 **Try the demo — no setup required!**
 > ```bash
 > git clone https://github.com/DUBSOpenHub/terminal-stampede.git
-> cd terminal-stampede && bin/stampede-demo.sh
+> cd terminal-stampede && ./install.sh
 > ```
 > Zero API calls. Just `tmux` and `bash`. See 8 agents work in real time.
 
@@ -34,10 +34,9 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 *8 agents working in parallel — command center tracking progress in real time*
 
-> ⚡ **Get started for real!**
-> ```bash
-> git clone https://github.com/DUBSOpenHub/terminal-stampede.git
-> cd terminal-stampede && chmod +x install.sh && ./install.sh
+> ⚡ **Ready for the real thing?** Open a Copilot CLI session and type:
+> ```
+> stampede 8 agents on ~/my-project
 > ```
 
 ---
