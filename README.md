@@ -28,6 +28,7 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 > git clone https://github.com/DUBSOpenHub/terminal-stampede.git
 > cd terminal-stampede && ./install.sh
 > ```
+
 > Zero API calls. Just `tmux` and `bash`. See 8 agents work in real time.
 
 
