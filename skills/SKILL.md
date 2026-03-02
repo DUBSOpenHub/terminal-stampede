@@ -41,7 +41,7 @@ If tasks are listed after `:` (semicolon-separated), create one task per descrip
 If no tasks given, analyze the repo and auto-generate them.
 
 **Greeting:** When the user says just "stampede" with no arguments, use `ask_user` with:
-> "Stampede is ready to go. What do you want the fleet to work on? Give me a repo and a task — for example: `stampede 8 agents on ~/dev/my-app : add unit tests; fix linting errors; update docs`"
+> "🦬 What repo and tasks? Example: `stampede 8 agents on ~/dev/my-app : add tests; fix errors; update docs`"
 
 ---
 
