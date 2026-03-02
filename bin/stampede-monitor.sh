@@ -15,6 +15,7 @@ RUNTIME_STATS="$BASE/runtime-stats.json"  # Layer 1 shadow scoring data
 STUCK_COUNTS="$BASE/.stuck-counts"  # track per-agent stuck events
 touch "$ALERTED_FILE" 2>/dev/null || true
 touch "$STUCK_COUNTS" 2>/dev/null || true
+START_TIME=$(date +%s)
 
 # Initialize runtime stats
 python3 -c "
@@ -44,14 +45,123 @@ if not os.path.exists(stats_path):
 declare -A LAST_ACTIVITY 2>/dev/null || true  # bash 3 fallback
 
 show_banner() {
-    printf "\033[1;33m"
-    echo "╔══════════════════════════════════════════════════════╗"
-    echo "║         🦬 T E R M I N A L   S T A M P E D E 🦬      ║"
-    echo "║                                                      ║"
-    echo "║  🦬  $TOTAL_TASKS tasks · $(basename "$BASE") · LIVE     ║"
-    echo "╚══════════════════════════════════════════════════════╝"
-    printf "\033[0m"
-    echo ""
+    local G="\033[38;5;220m"; local GN="\033[38;5;46m"; local AM="\033[38;5;214m"
+    local BL="\033[38;5;39m"; local MT="\033[38;5;240m"; local TX="\033[38;5;252m"
+    local B="\033[1m"; local R="\033[0m"; local BG="\033[48;5;233m"
+
+    # Count status
+    local queued=$(find "$BASE/queue" -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
+    local claimed=$(find "$BASE/claimed" -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
+    local done_count=$(find "$BASE/results" -name "*.json" -not -name ".tmp-*" -type f 2>/dev/null | wc -l | tr -d ' ')
+    local pct=0
+    [[ $TOTAL_TASKS -gt 0 ]] && pct=$((done_count * 100 / TOTAL_TASKS))
+
+    local COLS=$(tput cols 2>/dev/null || echo 120)
+    local ELAPSED=$(( $(date +%s) - START_TIME ))
+    local MINS=$((ELAPSED/60)); local SECS=$((ELAPSED%60))
+
+    # Status word
+    local ST
+    if [[ $done_count -ge $TOTAL_TASKS && $TOTAL_TASKS -gt 0 ]]; then ST="${GN}${B}COMPLETE${R}${BG}"
+    elif [[ $claimed -gt 0 ]]; then ST="${AM}${B}RUNNING${R}${BG}"
+    elif [[ $queued -gt 0 ]]; then ST="${BL}${B}QUEUED${R}${BG}"
+    else ST="${MT}IDLE${R}${BG}"; fi
+
+    # Title bar with progress
+    local BAR_W=$((COLS - 55))
+    [[ $BAR_W -lt 10 ]] && BAR_W=10
+    local FILLED=$((BAR_W * pct / 100)); local EMPTY=$((BAR_W - FILLED))
+    local FILL=""; local EMP=""
+    [[ $FILLED -gt 0 ]] && FILL=$(printf '█%.0s' $(seq 1 $FILLED))
+    [[ $EMPTY -gt 0 ]] && EMP=$(printf '░%.0s' $(seq 1 $EMPTY))
+
+    printf "${BG} ${B}${G}⚡ TERMINAL STAMPEDE${R}${BG}  ${ST}  ${GN}✓${done_count}${R}${BG} ${AM}⚙${claimed}${R}${BG} ${BL}◌${queued}${R}${BG}  ${G}${FILL}${R}${BG}${MT}${EMP}${R}${BG} ${B}${TX}${pct}%%${R}${BG}  ${MT}${MINS}m${SECS}s${R}${BG}${R}\n"
+
+    # Divider
+    printf "${BG} ${MT}"
+    printf '─%.0s' $(seq 1 $((COLS - 2)))
+    printf "${R}\n"
+
+    # Per-agent roster from fleet.json + tmux pane status
+    local SESSION_NAME="stampede-${RUN_ID}"
+    local FLEET_FILE="$BASE/fleet.json"
+
+    if [[ -f "$FLEET_FILE" ]]; then
+        local agent_idx=0
+        while IFS= read -r line; do
+            [[ "$line" =~ \"(worker-[0-9]+)\" ]] || continue
+            local wid="${BASH_REMATCH[1]}"
+            agent_idx=$((agent_idx + 1))
+            local model=$(python3 -c "import json; print(json.load(open('$FLEET_FILE')).get('$wid',{}).get('model','?'))" 2>/dev/null || echo "?")
+
+            # Detect status from tmux pane content
+            local PANE_LAST=$(tmux capture-pane -t "${SESSION_NAME}:0.${agent_idx}" -p 2>/dev/null | grep -v '^$' | tail -1 || true)
+            local ICON STATUS_WORD WC
+
+            # Check filesystem status first
+            local task_file=""
+            for cf in "$BASE/claimed"/*.json; do
+                [[ -f "$cf" ]] || continue
+                local cby=$(python3 -c "import json; print(json.load(open('$cf')).get('claimed_by',''))" 2>/dev/null || echo "")
+                if [[ "$cby" == "$wid" ]]; then
+                    task_file="$cf"
+                    break
+                fi
+            done
+
+            local is_done=false
+            for rf in "$BASE/results"/*.json; do
+                [[ -f "$rf" ]] || continue
+                local rby=$(python3 -c "import json; print(json.load(open('$rf')).get('worker_id',json.load(open('$rf')).get('claimed_by','')))" 2>/dev/null || echo "")
+                if [[ "$rby" == "$wid" ]]; then
+                    is_done=true
+                    break
+                fi
+            done
+
+            local pid_file="$PIDS_DIR/${wid}.pid"
+            local is_alive=false
+            if [[ -f "$pid_file" ]]; then
+                local wpid=$(cat "$pid_file")
+                kill -0 "$wpid" 2>/dev/null && is_alive=true
+            fi
+
+            if $is_done; then
+                ICON="\033[38;5;46m✓"; WC="\033[38;5;46m"; STATUS_WORD="done  "
+            elif ! $is_alive && [[ -f "$pid_file" ]]; then
+                ICON="\033[38;5;203m✕"; WC="\033[38;5;203m"; STATUS_WORD="dead  "
+            elif echo "$PANE_LAST" | grep -qi "error\|fail\|fatal" 2>/dev/null; then
+                ICON="\033[38;5;203m✕"; WC="\033[38;5;203m"; STATUS_WORD="ERROR "
+            elif echo "$PANE_LAST" | grep -qi "test\|npm test\|pytest\|vitest" 2>/dev/null; then
+                ICON="\033[38;5;39m⧫"; WC="\033[38;5;39m"; STATUS_WORD="test  "
+            elif echo "$PANE_LAST" | grep -qi "commit\|push\|git add" 2>/dev/null; then
+                ICON="\033[38;5;46m◉"; WC="\033[38;5;46m"; STATUS_WORD="commit"
+            elif echo "$PANE_LAST" | grep -qi "edit\|creat\|writ\|Implementing\|lines)" 2>/dev/null; then
+                ICON="\033[38;5;214m◉"; WC="\033[38;5;214m"; STATUS_WORD="code  "
+            elif echo "$PANE_LAST" | grep -qi "analyz\|structure\|detect\|scan" 2>/dev/null; then
+                ICON="\033[38;5;214m⟳"; WC="\033[38;5;214m"; STATUS_WORD="scan  "
+            elif [[ -n "$task_file" ]]; then
+                ICON="\033[38;5;214m●"; WC="\033[38;5;214m"; STATUS_WORD="active"
+            elif $is_alive; then
+                ICON="\033[38;5;39m●"; WC="\033[38;5;39m"; STATUS_WORD="boot  "
+            else
+                ICON="\033[38;5;240m○"; WC="\033[38;5;240m"; STATUS_WORD="wait  "
+            fi
+
+            # Get task title
+            local task_title=""
+            if [[ -n "$task_file" ]]; then
+                task_title=$(python3 -c "import json; print(json.load(open('$task_file')).get('title','')[:40])" 2>/dev/null || echo "")
+            fi
+
+            printf "${BG}  ${ICON}${R}${BG} ${B}${TX}Agent #${agent_idx}${R}${BG}  ${WC}${STATUS_WORD}${R}${BG}  ${G}%-20s${R}${BG}  ${TX}${task_title}${R}${BG}${R}\n" "${model}"
+        done < "$FLEET_FILE"
+    fi
+
+    # Divider
+    printf "${BG} ${MT}"
+    printf '─%.0s' $(seq 1 $((COLS - 2)))
+    printf "${R}\n"
 }
 
 show_completion() {
@@ -139,26 +249,7 @@ while true; do
     claimed=$(find "$BASE/claimed" -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
     done_count=$(find "$BASE/results" -name "*.json" -not -name ".tmp-*" -type f 2>/dev/null | wc -l | tr -d ' ')
     
-    # Progress bar
-    if [[ $TOTAL_TASKS -gt 0 ]]; then
-        pct=$((done_count * 100 / TOTAL_TASKS))
-        filled=$((pct * 40 / 100))
-        empty=$((40 - filled))
-        printf "  ⚙️  ["
-        printf "\033[1;33m"
-        printf '%0.s█' $(seq 1 $filled 2>/dev/null) 2>/dev/null || true
-        printf "\033[0m"
-        printf '%0.s░' $(seq 1 $empty 2>/dev/null) 2>/dev/null || true
-        printf "] %d%% (%d/%d)\n" "$pct" "$done_count" "$TOTAL_TASKS"
-    fi
-    echo ""
-    
-    # Fleet status
-    echo "  📋 Queue: $queued  ·  🔧 Active: $claimed  ·  ✅ Done: $done_count"
-    echo ""
-    
-    # Worker health check
-    echo "  ── Agents ──"
+    # Stuck agent detection (keeps bell/alert behavior)
     stuck_found=false
     for pf in "$PIDS_DIR"/worker-*.pid; do
         [ -f "$pf" ] || continue
@@ -166,8 +257,6 @@ while true; do
         wpid=$(cat "$pf")
         
         if kill -0 "$wpid" 2>/dev/null; then
-            # Check if this worker has been alive too long without producing a result
-            # Use the PID file modification time as a proxy
             if [[ "$(uname)" == "Darwin" ]]; then
                 pid_age=$(( $(date +%s) - $(stat -f %m "$pf") ))
             else
@@ -175,15 +264,9 @@ while true; do
             fi
             
             if [[ $pid_age -gt $STUCK_THRESHOLD ]] && [[ $claimed -gt 0 ]]; then
-                printf "    \033[1;31m┌──────────────────────────────────────────┐\033[0m\n"
-                printf "    \033[1;31m│ 🔴 $wid (PID $wpid) — STUCK (%ds) ⚠️   │\033[0m\n" "$pid_age"
-                printf "    \033[1;31m│     May need help! Ctrl-B z to zoom     │\033[0m\n"
-                printf "    \033[1;31m└──────────────────────────────────────────┘\033[0m\n"
-                # Bell once per stuck agent, not every loop
                 if ! grep -q "^${wid}$" "$ALERTED_FILE" 2>/dev/null; then
                     printf "$BELL"
                     echo "$wid" >> "$ALERTED_FILE"
-                    # Layer 1: increment stuck count for this agent
                     python3 -c "
 import json
 try:
@@ -195,40 +278,19 @@ except: pass
 " 2>/dev/null || true
                 fi
                 stuck_found=true
-            else
-                printf "    \033[32m🟢 $wid (PID $wpid) — working\033[0m\n"
             fi
-        else
-            printf "    \033[2m⬛ $wid (PID $wpid) — finished\033[0m\n"
         fi
     done
     
     if $stuck_found; then
-        echo ""
-        printf "    \033[1;31m⚠️  STUCK AGENT DETECTED — Zoom in (Ctrl-B z) to check!\033[0m\n"
+        printf "\033[48;5;233m \033[38;5;203m⚠ Stuck agent detected — F1-F8 to zoom in and check\033[0m\n"
     fi
     
-    # Active tasks
-    echo ""
-    echo "  ── Active Tasks ──"
-    for cf in "$BASE/claimed"/*.json; do
-        [ -f "$cf" ] || { echo "    (none)"; break; }
-        tid=$(python3 -c "import json; print(json.load(open('$cf')).get('task_id','?'))" 2>/dev/null || echo "?")
-        desc=$(python3 -c "import json; print(json.load(open('$cf')).get('description','')[:50])" 2>/dev/null || echo "?")
-        echo "    🔧 $tid: $desc"
-    done
-    
-    # Completed tasks  
-    echo ""
-    echo "  ── Completed ──"
-    for rf in "$BASE/results"/*.json; do
-        [ -f "$rf" ] || { echo "    (none yet)"; break; }
-        tid=$(python3 -c "import json; print(json.load(open('$rf')).get('task_id','?'))" 2>/dev/null || echo "?")
-        echo "    ✅ $tid"
-    done
-    
-    echo ""
-    printf "\033[2m  Updated: $(date +%H:%M:%S)  ·  Ctrl-B z to zoom a pane  ·  Ctrl-B d to detach\033[0m\n"
+    # Narration hint
+    ELAPSED=$(( $(date +%s) - START_TIME ))
+    HINTS=("F1-F8 zooms an agent fullscreen · F9 returns to grid" "Click any agent pane to interact with it directly" "Agents work on separate git branches to avoid conflicts" "Ctrl+B z toggles zoom on the selected pane")
+    HINT_IDX=$(( (ELAPSED / 6) % ${#HINTS[@]} ))
+    printf "\033[48;5;233m \033[38;5;220m🦬\033[0m\033[48;5;233m \033[38;5;252m${HINTS[$HINT_IDX]}\033[0m\n"
     
     # Check if all done
     if [[ $done_count -ge $TOTAL_TASKS ]] && [[ $TOTAL_TASKS -gt 0 ]]; then
