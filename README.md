@@ -10,6 +10,8 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 **tmux is the runtime.** Each pane is a full Copilot CLI session with its own 200K context window. The filesystem is the message bus — task claiming is an atomic file rename, no locks, no coordination server. Point it at any repo.
 
+**Built for GitHub Copilot CLI.** The pattern works anywhere — swap the agent command for any CLI tool that can read a task and write a result.
+
 📝 **[Read the full story →](BLOG.md)** *"I Split One Terminal Into 8 AI Brains. Here's What Happened."* — How Havoc Hackathon, Shadow Score, Dark Factory, and Agent X-Ray led to this experiment.
 
 ---
