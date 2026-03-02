@@ -17,6 +17,7 @@ MODELS=""  # comma-separated list for multi-model rotation
 TEARDOWN=false
 NO_ATTACH=false
 DRY_RUN=false
+PREFLIGHT=false
 # Run directory lives INSIDE the repo (.stampede/) so agents can access it.
 # Content exclusion policies block ~/.copilot/ but repos are always accessible.
 STAMPEDE_BASE=""  # set after REPO_PATH is known
@@ -32,6 +33,7 @@ while [[ $# -gt 0 ]]; do
         --teardown)  TEARDOWN=true;     shift   ;;
         --no-attach) NO_ATTACH=true;    shift   ;;
         --dry-run)   DRY_RUN=true;      shift   ;;
+        --preflight) PREFLIGHT=true;    shift   ;;
         -h|--help)
             echo "Usage: $0 --run-id <id> --count <n> --repo <path> [--model <model>] [--models m1,m2,m3]"
             echo ""
@@ -44,6 +46,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --teardown         Stop the session and cleanup"
             echo "  --no-attach        Don't auto-attach to tmux session"
             echo "  --dry-run          Show what would run without creating the session"
+            echo "  --preflight        Test that agents can access the queue before launching"
             echo "  -h, --help         Show this help"
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -161,9 +164,100 @@ with open(p, 'w') as f: json.dump(state, f, indent=2)
     exit 0
 }
 
+# ─── Preflight Check ─────────────────────────────────────────────────────────
+# Verifies agents can actually read the queue by spawning a test agent.
+do_preflight() {
+    echo ""
+    echo "🦬 Preflight Check"
+    echo "═══════════════════════════════════════════"
+    local fail=0
+
+    # 1. Prerequisites
+    echo "  ── Prerequisites ──"
+    check_prereqs
+
+    # 2. Run directory
+    echo ""
+    echo "  ── Run Directory ──"
+    if [[ -d "$BASE_DIR/queue" ]]; then
+        local tc
+        tc=$(find "$BASE_DIR/queue" -name '*.json' -type f 2>/dev/null | wc -l | tr -d ' ')
+        echo "  ✅ Queue exists ($tc tasks)"
+    else
+        echo "  ❌ Queue not found: $BASE_DIR/queue"
+        fail=1
+    fi
+
+    # 3. Git repo
+    echo ""
+    echo "  ── Repository ──"
+    if git -C "$REPO_PATH" rev-parse --git-dir &>/dev/null; then
+        local branch
+        branch=$(git -C "$REPO_PATH" rev-parse --abbrev-ref HEAD 2>/dev/null)
+        echo "  ✅ Git repo on branch: $branch"
+    else
+        echo "  ❌ Not a git repo: $REPO_PATH"
+        fail=1
+    fi
+
+    # 4. Agent access test — the critical check
+    echo ""
+    echo "  ── Agent Access (content exclusion test) ──"
+    # Write a canary file in the queue, ask the agent to read it
+    local canary="$BASE_DIR/queue/.preflight-canary"
+    echo "stampede-preflight-ok" > "$canary"
+
+    local agent_output
+    agent_output=$(cd "$REPO_PATH" && gh copilot -- \
+        --agent stampede-worker \
+        --model "${MODEL}" \
+        --allow-all-tools \
+        --autopilot \
+        --max-autopilot-continues 2 \
+        --no-ask-user \
+        -p "Read the file at $canary and print its contents. Only print the file contents, nothing else." 2>&1 | head -20)
+
+    rm -f "$canary"
+
+    if echo "$agent_output" | grep -q "stampede-preflight-ok"; then
+        echo "  ✅ Agent can read queue directory"
+    elif echo "$agent_output" | grep -qi "permission denied\|content exclusion"; then
+        echo "  ❌ Agent BLOCKED by content exclusion policy"
+        echo "     The queue is at: $BASE_DIR"
+        echo "     Agents cannot read files outside the repo."
+        echo ""
+        echo "  💡 Fix: ensure .stampede/ is inside the repo (not ~/.copilot/)"
+        fail=1
+    else
+        echo "  ⚠️  Agent response unclear — check manually:"
+        echo "$agent_output" | head -5 | sed 's/^/     /'
+    fi
+
+    # 5. Model availability
+    echo ""
+    echo "  ── Model ──"
+    if echo "$agent_output" | grep -qi "invalid\|not found\|not available"; then
+        echo "  ❌ Model '$MODEL' may not be available"
+        fail=1
+    else
+        echo "  ✅ Model: $MODEL"
+    fi
+
+    # Result
+    echo ""
+    echo "═══════════════════════════════════════════"
+    if [[ $fail -eq 0 ]]; then
+        echo "  ✅ PREFLIGHT PASSED — ready to stampede"
+    else
+        echo "  ❌ PREFLIGHT FAILED — fix issues above"
+    fi
+    echo "═══════════════════════════════════════════"
+    exit $fail
+}
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
-if ! $DRY_RUN; then
+if ! $DRY_RUN && ! $PREFLIGHT; then
     echo "Checking prerequisites..."
     check_prereqs
 fi
@@ -203,6 +297,11 @@ STAMPEDE_BASE="$REPO_PATH/.stampede"
 BASE_DIR="${STAMPEDE_BASE}/${RUN_ID}"
 SESSION_NAME="stampede-${RUN_ID}"
 PIDS_DIR="${BASE_DIR}/pids"
+
+# Preflight mode: test agent access and exit
+if $PREFLIGHT; then
+    do_preflight
+fi
 
 # Count tasks (for both dry-run and live run)
 if [[ -d "${BASE_DIR}/queue" ]]; then
