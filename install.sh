@@ -22,12 +22,17 @@ echo "  ✅ Orchestrator skill → $SKILL_DIR/SKILL.md"
 
 # Install worker agent
 cp "$SCRIPT_DIR/agents/stampede-worker.agent.md" "$AGENT_DIR/stampede-worker.agent.md"
-echo "  ✅ Worker agent → $AGENT_DIR/stampede-worker.agent.md"
+echo "  ✅ Agent → $AGENT_DIR/stampede-worker.agent.md"
 
 # Install launcher
 cp "$SCRIPT_DIR/bin/stampede.sh" "$BIN_DIR/stampede.sh"
 chmod +x "$BIN_DIR/stampede.sh"
 echo "  ✅ Launcher → $BIN_DIR/stampede.sh"
+
+# Install monitor
+cp "$SCRIPT_DIR/bin/stampede-monitor.sh" "$BIN_DIR/stampede-monitor.sh"
+chmod +x "$BIN_DIR/stampede-monitor.sh"
+echo "  ✅ Monitor → $BIN_DIR/stampede-monitor.sh"
 
 # Check ~/bin is in PATH
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
@@ -43,4 +48,4 @@ echo "  Usage:"
 echo "    stampede.sh --run-id run-YYYYMMDD-HHMMSS --count 8 --repo ~/your-project"
 echo ""
 echo "  Or in a Copilot CLI session:"
-echo "    stampede 8 workers on ~/your-project"
+echo "    stampede 8 agents on ~/your-project"
