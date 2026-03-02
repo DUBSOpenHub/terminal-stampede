@@ -413,12 +413,18 @@ echo "════════════════════════�
 if ! $NO_ATTACH; then
     ATTACHED=false
     if [[ "$(uname)" == "Darwin" ]]; then
-        osascript -e "
-            tell application \"Terminal\"
-                activate
-                do script \"tmux attach -t $SESSION_NAME\"
-            end tell
-        " 2>/dev/null && ATTACHED=true
+        # Write a tiny temp script that attaches to the tmux session
+        ATTACH_SCRIPT=$(mktemp /tmp/stampede-attach-XXXXXX.sh)
+        cat > "$ATTACH_SCRIPT" << ATTACHEOF
+#!/usr/bin/env bash
+clear
+echo "⚡ Connecting to Terminal Stampede..."
+sleep 0.5
+tmux attach -t $SESSION_NAME
+ATTACHEOF
+        chmod +x "$ATTACH_SCRIPT"
+        # Use 'open' which always works on macOS — opens a new Terminal window
+        open -a Terminal "$ATTACH_SCRIPT" 2>/dev/null && ATTACHED=true
     elif command -v gnome-terminal &>/dev/null; then
         gnome-terminal -- tmux attach -t "$SESSION_NAME" 2>/dev/null &
         ATTACHED=true
