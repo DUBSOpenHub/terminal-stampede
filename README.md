@@ -15,9 +15,14 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 📝 **[Read the full story →](BLOG.md)** *"What If You Could Run 8 AI Agents in One Terminal?"* — How Havoc Hackathon, Shadow Score, Dark Factory, and Agent X-Ray led to this experiment.
 
 ---
-<img width="1704" height="1090" alt="Screenshot 2026-03-02 at 3 04 54 PM" src="https://github.com/user-attachments/assets/ec9b3b7c-f85e-49aa-8c86-ea2f6caf1743" />
 
 
+<img width="1698" height="1034" alt="Screenshot 2026-03-02 at 3 40 31 PM" src="https://github.com/user-attachments/assets/e03d4b14-0430-40e7-8410-3eef71b7250a" />
+
+---
+
+
+<img width="691" height="272" alt="Screenshot 2026-03-02 at 3 39 22 PM" src="https://github.com/user-attachments/assets/94fb8aeb-f359-4f74-99b3-3ea2a77c48fe" />
 > 🦬 **Try the demo — no setup required!**
 > ```bash
 > git clone https://github.com/DUBSOpenHub/terminal-stampede.git
