@@ -1,12 +1,12 @@
-# I Split One Terminal Into 8 AI Brains. Here's What Happened.
+# What If You Could Run 8 AI Agents in One Terminal?
 
-I didn't set out to build a multi-agent orchestration framework. I was just trying to make my agents better, and this fell out of the process.
+I didn't plan to build this. I was exploring what the Copilot CLI could do, and one experiment kept leading to the next.
 
 ## It started with the arena
 
 Working in the Copilot CLI, I kept wondering: when you ask two AI models to do the same task, how do you actually know which one did a better job? Not vibes. Not "this one feels smarter." Something measurable.
 
-That became [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon) — a skill that pits up to 14 AI models against each other in tournament elimination. Sealed judges, ELO ratings, evolution between rounds. The leaderboard has real data on which models are good at what.
+That became [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon) — a skill that pits up to 14 AI models against each other in tournament elimination. Sealed judges, ELO ratings, evolution between rounds.
 
 ## Then came the measuring stick
 
@@ -24,7 +24,7 @@ Dark Factory builds things, but how do you know the agents themselves are well-c
 
 But Havoc Hackathon has a constraint: every contestant runs as a sub-agent inside the same session. The orchestrator dispatches them, collects results, and scores them. They each get their own context, but they're managed processes — the orchestrator is the bottleneck, and contestants can't interact with the repo the way a real developer would (reading files, editing code, running tests, iterating on failures).
 
-I was watching Hackathon #37 run — 8 models competing to build a multi-agent framework (meta, I know) — and I thought: what if each contestant had its own terminal? Not a sub-agent sharing my context, but a completely independent Copilot session with its own 200K tokens of working memory, its own tool access, its own ability to read files, edit code, and run tests.
+I was watching a hackathon run — 8 models competing to build a multi-agent framework (meta, I know) — and I thought: what if each contestant had its own terminal? Not a managed sub-agent, but a completely independent Copilot session with its own 200K tokens of working memory, its own tool access, its own ability to read files, edit code, and run tests.
 
 I already had the pieces. Copilot CLI supports custom agents (`--agent`). tmux can split a terminal into arbitrary panes. Filesystems are already message queues if you squint.
 
@@ -41,7 +41,7 @@ The idea was simple:
 
 No server. No database. No framework. Just files and terminals.
 
-I had Hackathon #37's contestants build it. Eight models, three files each, two elimination rounds. Then I synthesized the best elements from the top two finalists into a working prototype.
+I had a hackathon's contestants build it. Eight models, three files each, two elimination rounds. Then I synthesized the best elements from the top two finalists into a working prototype.
 
 ## What I learned by running it
 
@@ -55,15 +55,15 @@ Doing those same tasks one at a time would have meant sitting through each one s
 
 ## What this connects to
 
-Each tool I'd built before turned out to be a layer of the same stack:
+Each tool I'd built before turned out to solve a piece of the same problem:
 
-- **[Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon)** maintains an ELO leaderboard across 15 models and 37 competitions. Stampede could use that data to route tasks to the right model.
+- **[Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon)** maintains an ELO leaderboard across 15 models. Stampede could use that data to route tasks to the right model.
 - **[Shadow Score](https://github.com/DUBSOpenHub/shadow-score-spec)** measures output quality. Stampede could shadow-score results before accepting them.
 - **[Dark Factory](https://github.com/DUBSOpenHub/dark-factory)** builds production code through a checkpoint pipeline. Stampede could parallelize the build phases.
 - **[Agent X-Ray](https://github.com/DUBSOpenHub/agent-xray)** scans agents and scores their quality. Stampede could use those scores to decide which agents to deploy.
 - **[Ghost Ops](https://github.com/DUBSOpenHub/ghost-ops)** runs autonomous missions on a schedule. Stampede could be a mission type — "every morning at 6am, dispatch 8 agents to sweep the codebase."
 
-None of this was planned. Each tool solved a specific problem, and they happened to compose.
+These aren't integrated yet — they're just experiments that turned out to be adjacent.
 
 ## What I'm still figuring out
 
@@ -83,8 +83,16 @@ Terminal Stampede treats agents as developers. Each one gets a desk (tmux pane),
 
 The distinction matters because the agent doesn't just think — it does. It reads code, edits files, runs tests, sees failures, and iterates. You can't do that well in a shared context. You need your own workspace.
 
+And because every agent runs in a visible pane, you're not handing off control. You can watch them work, zoom into any pane, type into it, or just walk away. Most multi-agent systems give you logs when it's over. This one puts you in the room while it's happening.
+
+## We pointed it at itself
+
+To test it, we pointed stampede at its own repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the worker agent, updating the changelog. Nobody touched anything. They just ran.
+
+8/8 success. ~6 minutes. Zero coordination failures. ~800 lines of real changes across 8 branches. The simplest possible architecture was also the most reliable.
+
 The CLI was already the agent runtime. I just needed 8 of them.
 
 ---
 
-*Built during [Havoc Hackathon #37](https://github.com/DUBSOpenHub/havoc-hackathon). Tested on [ghost-ops](https://github.com/DUBSOpenHub/ghost-ops). Code at [terminal-stampede](https://github.com/DUBSOpenHub/terminal-stampede).*
+*Built during a [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon). Tested on [ghost-ops](https://github.com/DUBSOpenHub/ghost-ops) and itself. Code at [terminal-stampede](https://github.com/DUBSOpenHub/terminal-stampede).*
