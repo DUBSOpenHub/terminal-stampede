@@ -35,7 +35,7 @@ filesystem IPC, monitor progress, recover dead agents, and synthesize results.
 | `stampede status [RUN_ID]` | Show run status |
 | `stampede teardown [RUN_ID]` | Tear down agents and clean up |
 
-**Defaults:** agents = 3 (max 8), model = `claude-sonnet-4-5`, repo = cwd
+**Defaults:** agents = 3 (max 8), model = `claude-sonnet-4.5`, repo = cwd
 
 If tasks are listed after `:` (semicolon-separated), create one task per description.
 If no tasks given, analyze the repo and auto-generate them.
@@ -105,7 +105,7 @@ Extract from the user's natural-language prompt:
 | `objective` | what the user wants done | *(required)* |
 | `repo_path` | repository path (resolve `~`) | cwd |
 | `worker_count` | "N agents" | 3 (max 8) |
-| `model` | "with model X" | claude-sonnet-4-5 |
+| `model` | "with model X" | claude-sonnet-4.5 |
 
 If `stampede resume [RUN_ID]` → skip to STEP 9.
 If `stampede status` → query SQL + filesystem, report.
@@ -296,7 +296,7 @@ with open(f"{base}/state.json", "w") as f:
   "base": "~/.copilot/stampede/run-20250715-143022",
   "objective": "...",
   "repo_path": "/abs/path",
-  "model": "claude-sonnet-4-5",
+  "model": "claude-sonnet-4.5",
   "phase": "stampedeing|running|synthesizing|completed",
   "tasks": { "queued": [], "claimed": [], "completed": [] },
   "workers": [{ "worker_id": "a1b2c3", "pid": 12345, "status": "alive" }],
@@ -655,7 +655,7 @@ Offer: `stampede teardown RUN_ID`, `stampede resume RUN_ID`, branch links.
 - [ ] tmux is available
 - [ ] Target repo has .git directory
 - [ ] `--max-autopilot-continues 30` on agents
-- [ ] Worker model configured (default: claude-sonnet-4-5)
+- [ ] Worker model configured (default: claude-sonnet-4.5)
 
 ## COMPLETION CRITERIA
 
