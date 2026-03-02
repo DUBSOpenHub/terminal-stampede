@@ -10,7 +10,35 @@ TOTAL_TASKS=$(find "$BASE/queue" "$BASE/claimed" "$BASE/results" -name "*.json" 
 STUCK_THRESHOLD=180  # seconds without progress = stuck
 BELL=$'\a'
 ALERTED_FILE="$BASE/.alerted"  # track which agents already belled
+RUNTIME_STATS="$BASE/runtime-stats.json"  # Layer 1 shadow scoring data
+STUCK_COUNTS="$BASE/.stuck-counts"  # track per-agent stuck events
 touch "$ALERTED_FILE" 2>/dev/null || true
+touch "$STUCK_COUNTS" 2>/dev/null || true
+
+# Initialize runtime stats
+python3 -c "
+import json, os
+stats_path = '$RUNTIME_STATS'
+if not os.path.exists(stats_path):
+    fleet_path = '$BASE/fleet.json'
+    fleet = {}
+    if os.path.exists(fleet_path):
+        with open(fleet_path) as f:
+            fleet = json.load(f)
+    agents = {}
+    for wid, info in fleet.items():
+        agents[wid] = {
+            'model': info.get('model', 'unknown'),
+            'task_id': None,
+            'start_time': None,
+            'end_time': None,
+            'duration_seconds': None,
+            'stuck_count': 0,
+            'files_changed': 0
+        }
+    with open(stats_path, 'w') as f:
+        json.dump({'agents': agents}, f, indent=2)
+" 2>/dev/null || true
 
 declare -A LAST_ACTIVITY 2>/dev/null || true  # bash 3 fallback
 
@@ -76,7 +104,10 @@ show_completion() {
     echo "╔══════════════════════════════════════════════════════╗"
     echo "║                                                      ║"
     echo "║  👈 Go back to your Copilot CLI session for the      ║"
-    echo "║     full report, branch details, and merge options.  ║"
+    echo "║     full report, shadow scores, and auto-merge.      ║"
+    echo "║                                                      ║"
+    echo "║  🦬 Auto-merge available — merges all branches into  ║"
+    echo "║     one and scores each agent's work quality.        ║"
     echo "║                                                      ║"
     echo "╚══════════════════════════════════════════════════════╝"
     printf "\033[0m"
@@ -151,6 +182,16 @@ while true; do
                 if ! grep -q "^${wid}$" "$ALERTED_FILE" 2>/dev/null; then
                     printf "$BELL"
                     echo "$wid" >> "$ALERTED_FILE"
+                    # Layer 1: increment stuck count for this agent
+                    python3 -c "
+import json
+try:
+    with open('$RUNTIME_STATS') as f: stats = json.load(f)
+    if '$wid' in stats.get('agents', {}):
+        stats['agents']['$wid']['stuck_count'] = stats['agents']['$wid'].get('stuck_count', 0) + 1
+    with open('$RUNTIME_STATS', 'w') as f: json.dump(stats, f, indent=2)
+except: pass
+" 2>/dev/null || true
                 fi
                 stuck_found=true
             else
@@ -190,6 +231,48 @@ while true; do
     
     # Check if all done
     if [[ $done_count -ge $TOTAL_TASKS ]] && [[ $TOTAL_TASKS -gt 0 ]]; then
+        # Layer 1: Finalize runtime stats with task mappings and completion times
+        python3 -c "
+import json, os, time
+
+stats_path = '$RUNTIME_STATS'
+results_dir = '$BASE/results'
+try:
+    with open(stats_path) as f:
+        stats = json.load(f)
+
+    # Map workers to tasks and capture file counts from results
+    for rf in sorted(os.listdir(results_dir)):
+        if not rf.endswith('.json') or rf.startswith('.tmp-'):
+            continue
+        with open(os.path.join(results_dir, rf)) as f:
+            result = json.load(f)
+        wid = result.get('worker_id', '')
+        if wid in stats.get('agents', {}):
+            stats['agents'][wid]['task_id'] = result.get('task_id')
+            stats['agents'][wid]['end_time'] = result.get('completed_at')
+            files = result.get('files_changed', [])
+            stats['agents'][wid]['files_changed'] = len(files) if isinstance(files, list) else files
+
+    # Calculate durations from PID file creation time (start) to result time
+    pids_dir = '$PIDS_DIR'
+    for wid, info in stats.get('agents', {}).items():
+        pid_file = os.path.join(pids_dir, wid + '.pid')
+        if os.path.exists(pid_file):
+            start = os.path.getmtime(pid_file)
+            info['start_time'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(start))
+            if info.get('end_time'):
+                from datetime import datetime
+                try:
+                    end = datetime.strptime(info['end_time'], '%Y-%m-%dT%H:%M:%SZ')
+                    info['duration_seconds'] = int(end.timestamp() - start)
+                except: pass
+
+    with open(stats_path, 'w') as f:
+        json.dump(stats, f, indent=2)
+except Exception as e:
+    pass
+" 2>/dev/null || true
         sleep 2
         show_completion
     fi

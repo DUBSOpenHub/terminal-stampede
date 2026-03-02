@@ -24,6 +24,10 @@ echo "  ✅ Orchestrator skill → $SKILL_DIR/SKILL.md"
 cp "$SCRIPT_DIR/agents/stampede-worker.agent.md" "$AGENT_DIR/stampede-worker.agent.md"
 echo "  ✅ Agent → $AGENT_DIR/stampede-worker.agent.md"
 
+# Install merger agent
+cp "$SCRIPT_DIR/agents/stampede-merger.agent.md" "$AGENT_DIR/stampede-merger.agent.md"
+echo "  ✅ Merger agent → $AGENT_DIR/stampede-merger.agent.md"
+
 # Install launcher
 cp "$SCRIPT_DIR/bin/stampede.sh" "$BIN_DIR/stampede.sh"
 chmod +x "$BIN_DIR/stampede.sh"
@@ -33,6 +37,11 @@ echo "  ✅ Launcher → $BIN_DIR/stampede.sh"
 cp "$SCRIPT_DIR/bin/stampede-monitor.sh" "$BIN_DIR/stampede-monitor.sh"
 chmod +x "$BIN_DIR/stampede-monitor.sh"
 echo "  ✅ Monitor → $BIN_DIR/stampede-monitor.sh"
+
+# Install merger script
+cp "$SCRIPT_DIR/bin/stampede-merge.sh" "$BIN_DIR/stampede-merge.sh"
+chmod +x "$BIN_DIR/stampede-merge.sh"
+echo "  ✅ Merger → $BIN_DIR/stampede-merge.sh"
 
 # Check ~/bin is in PATH
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then

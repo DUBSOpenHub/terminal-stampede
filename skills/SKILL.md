@@ -544,6 +544,132 @@ done
 
 ---
 
+## STEP 8.5 — AUTO-MERGE WITH SHADOW SCORING
+
+After synthesis, offer the auto-merger. This merges all agent branches into a single combined branch and shadow-scores each agent's work quality across 3 layers.
+
+### Offer merge
+
+Use `ask_user` with the question:
+
+> "🦬 Auto-merge all agent branches into one? The merger will resolve conflicts using AI and shadow-score each agent's work quality."
+
+Choices: **Auto-merge + score (Recommended)**, **Manual (I'll merge myself)**, **Skip**
+
+### If accepted: Launch the merger
+
+```bash
+chmod +x ~/bin/stampede-merge.sh
+~/bin/stampede-merge.sh \
+  --run-id THE_RUN_ID \
+  --repo THE_REPO_PATH \
+  --model THE_MODEL
+```
+
+Wait for the merger to complete, then read the merge report:
+
+```python
+python3 -c '
+import json, os
+
+report_path = "THE_BASE_DIR/merge-report.json"
+if not os.path.exists(report_path):
+    print("NO_REPORT")
+    exit(0)
+
+with open(report_path) as f:
+    report = json.load(f)
+
+s = report.get("summary", {})
+print(f"MERGED: {s.get(\"clean_merges\",0)} clean, {s.get(\"conflicts_resolved\",0)} resolved, {s.get(\"skipped\",0)} skipped")
+print(f"BRANCH: {report.get(\"merged_branch\",\"?\")}")
+print(f"AVG_SCORE: {s.get(\"avg_score\",\"?\")}")
+'
+```
+
+### Show the shadow scorecard
+
+Present scores in a formatted table:
+
+```
+🦬 Shadow Scorecard
+═══════════════════════════════════════════════════════════════════════
+ Agent       Model              Complete  Scope  Quality  Conflict  Test  Total
+ ─────────────────────────────────────────────────────────────────────────────
+ task-001    claude-sonnet-4.5     9       10       8       10       7    44/50
+ task-002    claude-sonnet-4.5     7        8       9       7        7    38/50
+ task-003    gpt-5.1               8        9       8       10       5    40/50
+═══════════════════════════════════════════════════════════════════════
+ Average: 40.7/50  ·  Best: task-001 (44)  ·  Merged branch: stampede/merged-RUN_ID
+```
+
+If runtime stats exist (Layer 1), add bonus/penalty annotations:
+- ⚡ Speed bonus (+2) for agents that completed in under 2 minutes
+- 🐌 Stuck penalty (-1 per event) for agents that got stuck
+
+### Persist model stats (cross-run tracking)
+
+After showing the scorecard, update the persistent model stats file:
+
+```python
+python3 -c '
+import json, os, time
+
+stats_path = os.path.expanduser("~/.copilot/stampede-model-stats.json")
+report_path = "THE_BASE_DIR/merge-report.json"
+
+# Load existing stats or initialize
+if os.path.exists(stats_path):
+    with open(stats_path) as f:
+        stats = json.load(f)
+else:
+    stats = {"models": {}, "runs": 0, "updated": None}
+
+with open(report_path) as f:
+    report = json.load(f)
+
+stats["runs"] += 1
+stats["updated"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+for branch, info in report.get("branches", {}).items():
+    model = info.get("model", "unknown")
+    scores = info.get("scores", {})
+    total = scores.get("adjusted_total", scores.get("total", 0))
+
+    if model not in stats["models"]:
+        stats["models"][model] = {
+            "runs": 0, "total_score": 0, "best": 0, "worst": 50,
+            "categories": {"completeness": 0, "scope_adherence": 0,
+                           "code_quality": 0, "conflict_friendliness": 0,
+                           "test_impact": 0}
+        }
+    m = stats["models"][model]
+    m["runs"] += 1
+    m["total_score"] += total
+    m["best"] = max(m["best"], total)
+    m["worst"] = min(m["worst"], total)
+    for cat in m["categories"]:
+        m["categories"][cat] += scores.get(cat, 0)
+
+with open(stats_path, "w") as f:
+    json.dump(stats, f, indent=2)
+'
+```
+
+If 2+ runs exist, show a model leaderboard:
+
+```
+📊 Model Leaderboard (across N stampede runs)
+
+ Rank  Model               Avg Score  Runs  Best  Worst
+ ──────────────────────────────────────────────────────
+  1.   claude-sonnet-4.5     43.2      12     48    37
+  2.   gpt-5.1               40.1       8     45    33
+  3.   claude-haiku-4.5      37.8       4     42    31
+```
+
+---
+
 ## STEP 9 — CRASH RECOVERY (stampede resume)
 
 ```python
