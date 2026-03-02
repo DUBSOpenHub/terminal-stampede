@@ -16,7 +16,9 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 ---
 
-![Terminal Stampede in action](docs/stampede-demo.gif)
+<img width="1698" height="1056" alt="Screenshot 2026-03-01 at 8 16 25 PM" src="https://github.com/user-attachments/assets/d40cab9b-f9aa-4aaf-b6a5-23b43a712ef6" />
+
+
 *8 agents working in parallel — monitor pane tracking progress, agents editing code across the codebase*
 
 > ⚡ **Get started fast!**
