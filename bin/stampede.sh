@@ -15,6 +15,7 @@ MODEL="claude-haiku-4.5"
 MODELS=""  # comma-separated list for multi-model rotation
 TEARDOWN=false
 NO_ATTACH=false
+DRY_RUN=false
 STAMPEDE_BASE="$HOME/.copilot/stampede"
 
 # ─── Argument Parsing ────────────────────────────────────────────────────────
@@ -27,8 +28,20 @@ while [[ $# -gt 0 ]]; do
         --models)    MODELS="$2";       shift 2 ;;
         --teardown)  TEARDOWN=true;     shift   ;;
         --no-attach) NO_ATTACH=true;    shift   ;;
+        --dry-run)   DRY_RUN=true;      shift   ;;
         -h|--help)
             echo "Usage: $0 --run-id <id> --count <n> --repo <path> [--model <model>] [--models m1,m2,m3]"
+            echo ""
+            echo "Options:"
+            echo "  --run-id <id>      Run identifier (format: run-YYYYMMDD-HHMMSS)"
+            echo "  --count <n>        Number of workers (default: 3)"
+            echo "  --repo <path>      Repository path (must be a git repo)"
+            echo "  --model <model>    AI model to use (default: claude-haiku-4.5)"
+            echo "  --models <list>    Comma-separated models for rotation"
+            echo "  --teardown         Stop the session and cleanup"
+            echo "  --no-attach        Don't auto-attach to tmux session"
+            echo "  --dry-run          Show what would run without creating the session"
+            echo "  -h, --help         Show this help"
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
@@ -141,8 +154,10 @@ with open(p, 'w') as f: json.dump(state, f, indent=2)
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
-echo "Checking prerequisites..."
-check_prereqs
+if ! $DRY_RUN; then
+    echo "Checking prerequisites..."
+    check_prereqs
+fi
 
 if $TEARDOWN; then
     do_teardown
@@ -178,13 +193,60 @@ BASE_DIR="${STAMPEDE_BASE}/${RUN_ID}"
 SESSION_NAME="stampede-${RUN_ID}"
 PIDS_DIR="${BASE_DIR}/pids"
 
+# Count tasks (for both dry-run and live run)
+if [[ -d "${BASE_DIR}/queue" ]]; then
+    TASK_COUNT=$(find "${BASE_DIR}/queue" -name '*.json' -type f 2>/dev/null | wc -l | tr -d ' ')
+else
+    TASK_COUNT=0
+fi
+
+# Dry-run mode: print config and exit
+if $DRY_RUN; then
+    echo "════════════════════════════════════════════════════════"
+    echo "  🦬 STAMPEDE DRY RUN"
+    echo "════════════════════════════════════════════════════════"
+    echo ""
+    echo "  Run ID:       $RUN_ID"
+    echo "  Repo:         $REPO_PATH"
+    echo "  Worker Count: $WORKER_COUNT"
+    
+    IFS=',' read -ra MODEL_LIST_PREVIEW <<< "${MODELS:-$MODEL}"
+    if [[ ${#MODEL_LIST_PREVIEW[@]} -gt 1 ]]; then
+        echo "  Models:       ${MODEL_LIST_PREVIEW[*]} (rotating)"
+    else
+        echo "  Model:        ${MODEL_LIST_PREVIEW[0]}"
+    fi
+    
+    echo "  Tasks:        $TASK_COUNT"
+    echo "  Session:      $SESSION_NAME"
+    echo "  Base Dir:     $BASE_DIR"
+    echo ""
+    
+    if [[ ! -d "$BASE_DIR" ]]; then
+        echo "  ⚠️  Run directory does not exist: $BASE_DIR"
+    elif [[ "$TASK_COUNT" -eq 0 ]]; then
+        echo "  ⚠️  No tasks in queue"
+    else
+        echo "  ✅ Run directory exists with $TASK_COUNT tasks ready"
+    fi
+    
+    echo ""
+    echo "  Would create tmux session with:"
+    for ((i = 1; i <= WORKER_COUNT; i++)); do
+        worker_model_idx=$(( (i - 1) % ${#MODEL_LIST_PREVIEW[@]} ))
+        worker_model="${MODEL_LIST_PREVIEW[$worker_model_idx]}"
+        echo "    • Worker $i → $worker_model"
+    done
+    echo ""
+    echo "════════════════════════════════════════════════════════"
+    exit 0
+fi
+
 if [[ ! -d "$BASE_DIR" ]]; then
     echo "ERROR: Run directory not found: $BASE_DIR" >&2
     exit 1
 fi
 
-# Verify queue has tasks
-TASK_COUNT=$(find "${BASE_DIR}/queue" -name '*.json' -type f 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$TASK_COUNT" -eq 0 ]]; then
     echo "ERROR: No tasks in queue (${BASE_DIR}/queue)" >&2
     exit 1
