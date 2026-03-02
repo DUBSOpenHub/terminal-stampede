@@ -306,7 +306,7 @@ with open(f"{base}/state.json", "w") as f:
 
 ---
 
-## STEP 6 — LAUNCH WORKERS
+## STEP 6 — LAUNCH AGENTS
 
 Invoke the launcher with `bash(mode="async", detach=true)`: <!-- Landmine #21 -->
 
@@ -316,9 +316,10 @@ chmod +x ~/bin/stampede.sh
   --run-id THE_RUN_ID \
   --count WORKER_COUNT \
   --repo THE_REPO_PATH \
-  --model THE_MODEL \
-  --no-attach
+  --model THE_MODEL
 ```
+
+This opens a new Terminal window attached to the tmux session so the user can watch their agents work in real time.
 
 Wait 5 seconds, then verify:
 
