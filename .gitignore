@@ -7,9 +7,4 @@ node_modules/
 __pycache__/
 *.pyc
 .venv/
-
-# Swift build artifacts
-ui/macos/.build/
-
-# Swift build artifacts
-ui/macos/.build/
+ui/
