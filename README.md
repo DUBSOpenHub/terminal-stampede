@@ -6,6 +6,8 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 **Zero infrastructure.** No Redis, no HTTP, no Docker, no cloud. Just files on disk and tmux.
 
+**You're not handing off control.** Every agent runs in a visible pane. Zoom in on any one, type into it, kill it, or just watch. Most multi-agent systems give you logs after the fact. This one puts you in the room.
+
 📝 **[Read the full story →](BLOG.md)** *"I Split One Terminal Into 8 AI Brains. Here's What Happened."* — How Havoc Hackathon, Shadow Score, Dark Factory, and Agent X-Ray led to this experiment.
 
 ---
