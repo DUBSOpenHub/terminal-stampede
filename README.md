@@ -16,18 +16,18 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 ---
 
+> 🦬 **Try the demo — no setup required!**
+> ```bash
+> git clone https://github.com/DUBSOpenHub/terminal-stampede.git
+> cd terminal-stampede && bin/stampede-demo.sh
+> ```
+> Zero API calls. Just `tmux` and `bash`. See 8 agents work in real time.
+
 <img width="1698" height="1056" alt="Screenshot 2026-03-01 at 8 16 25 PM" src="https://github.com/user-attachments/assets/d40cab9b-f9aa-4aaf-b6a5-23b43a712ef6" />
 
 ![Terminal Stampede Demo](assets/demo.gif)
 
 *Boot sequence → command center tracking 8 agents → all tasks complete*
-
-> 🦬 **Try the demo first — no setup required!**
-> ```bash
-> git clone https://github.com/DUBSOpenHub/terminal-stampede.git
-> cd terminal-stampede && chmod +x bin/stampede-demo.sh && bin/stampede-demo.sh
-> ```
-> Zero API calls. Just `tmux` and `bash`. See 8 simulated agents work in real time, click into any pane, zoom with F1-F8.
 
 > ⚡ **Get started for real!**
 > ```bash
