@@ -60,9 +60,13 @@ worker_id = "worker-" + subprocess.check_output(
     ["openssl", "rand", "-hex", "3"]).decode().strip()
 print(f"WORKER_ID={worker_id}")
 
-# Auto-discover active stampede run if not provided in prompt
-stampede_dir = os.path.expanduser("~/.copilot/stampede")
-candidates = sorted(glob.glob(f"{stampede_dir}/run-*/queue/*.json"), reverse=True)
+# Auto-discover active stampede run
+# Check in-repo .stampede/ first (preferred), then legacy ~/.copilot/stampede/
+cwd = os.getcwd()
+candidates = sorted(glob.glob(f"{cwd}/.stampede/run-*/queue/*.json"), reverse=True)
+if not candidates:
+    stampede_dir = os.path.expanduser("~/.copilot/stampede")
+    candidates = sorted(glob.glob(f"{stampede_dir}/run-*/queue/*.json"), reverse=True)
 if not candidates:
     print("NO_TASKS=true")
 else:
@@ -74,9 +78,9 @@ else:
     if os.path.exists(state_path):
         with open(state_path) as f:
             state = json.load(f)
-        print(f"REPO_PATH={state.get(\"repo_path\", os.getcwd())}")
+        print(f"REPO_PATH={state.get(\"repo_path\", cwd)}")
     else:
-        print(f"REPO_PATH={os.getcwd()}")
+        print(f"REPO_PATH={cwd}")
 '
 ```
 

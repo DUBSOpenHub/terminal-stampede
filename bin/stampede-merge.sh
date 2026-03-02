@@ -26,7 +26,8 @@ fi
 RUN_ID=""
 REPO_PATH=""
 MODEL="claude-sonnet-4.5"
-STAMPEDE_BASE="$HOME/.copilot/stampede"
+# Run directory lives inside the repo — set after REPO_PATH is known
+STAMPEDE_BASE=""
 
 # ─── Argument Parsing ────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -59,7 +60,15 @@ if [[ ! -d "$REPO_PATH/.git" ]]; then
     exit 1
 fi
 
-BASE_DIR="$STAMPEDE_BASE/$RUN_ID"
+# Run directory inside the repo (or legacy ~/.copilot/stampede/)
+if [[ -d "$REPO_PATH/.stampede/$RUN_ID" ]]; then
+    BASE_DIR="$REPO_PATH/.stampede/$RUN_ID"
+elif [[ -d "$HOME/.copilot/stampede/$RUN_ID" ]]; then
+    BASE_DIR="$HOME/.copilot/stampede/$RUN_ID"
+else
+    echo "❌ Run directory not found in repo or ~/.copilot/stampede/" >&2
+    exit 1
+fi
 RESULTS_DIR="$BASE_DIR/results"
 
 if [[ ! -d "$RESULTS_DIR" ]]; then

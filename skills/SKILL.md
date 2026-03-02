@@ -135,7 +135,8 @@ python3 -c '
 import datetime, os
 
 run_id = f"run-{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}"
-base = os.path.expanduser(f"~/.copilot/stampede/{run_id}")
+repo_path = "THE_REPO_PATH"
+base = os.path.join(repo_path, ".stampede", run_id)
 
 for d in ["queue", "claimed", "results", "logs", "pids"]:
     os.makedirs(f"{base}/{d}", exist_ok=True)
@@ -147,6 +148,15 @@ print(f"BASE={base}")
 
 <!-- Landmine #20: run-YYYYMMDD-HHMMSS format prevents collisions -->
 <!-- Landmine #23: All directories created before any operations -->
+<!-- Run dir lives inside repo (.stampede/) so agents can access it. -->
+<!-- Content exclusion policies block ~/.copilot/ but repos are always accessible. -->
+
+Ensure `.stampede/` is in `.gitignore`:
+
+```bash
+cd REPO_PATH
+grep -q '.stampede' .gitignore 2>/dev/null || echo '.stampede/' >> .gitignore
+```
 
 All coordination uses these directories — zero infrastructure, pure filesystem IPC:
 - `queue/` — tasks waiting to be claimed
@@ -293,7 +303,7 @@ with open(f"{base}/state.json", "w") as f:
 ```json
 {
   "run_id": "run-20250715-143022",
-  "base": "~/.copilot/stampede/run-20250715-143022",
+  "base": "REPO_PATH/.stampede/run-20250715-143022",
   "objective": "...",
   "repo_path": "/abs/path",
   "model": "claude-sonnet-4.5",
@@ -743,7 +753,8 @@ If 2+ runs exist, show a model leaderboard:
 python3 -c '
 import json, os, glob as g
 
-stampede_dir = os.path.expanduser("~/.copilot/stampede")
+repo_path = "THE_REPO_PATH"
+stampede_dir = os.path.join(repo_path, ".stampede")
 run_id = "PROVIDED_OR_EMPTY"
 
 if not run_id:

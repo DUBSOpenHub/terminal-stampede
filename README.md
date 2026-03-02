@@ -101,12 +101,13 @@ The orchestrator reads your codebase, generates 8 task files, launches the fleet
 Create task files yourself, then launch:
 
 ```bash
-# 1. Create a run directory
+# 1. Create a run directory (inside your repo)
+cd ~/my-project
 RUN_ID="run-$(date +%Y%m%d-%H%M%S)"
-mkdir -p ~/.copilot/stampede/$RUN_ID/{queue,claimed,results,logs}
+mkdir -p .stampede/$RUN_ID/{queue,claimed,results,logs}
 
 # 2. Add task files (one JSON per task)
-cat > ~/.copilot/stampede/$RUN_ID/queue/task-001.json << 'EOF'
+cat > .stampede/$RUN_ID/queue/task-001.json << 'EOF'
 {
   "task_id": "task-001",
   "description": "Add input validation to the auth module",
@@ -243,6 +244,7 @@ Options:
    ┌─────────────────────────────────┐
    │  ~/.copilot/stampede/{run_id}/  │
    │  queue/ → claimed/ → results/  │
+   │  (lives in repo: .stampede/)  │
    └───────────────┬─────────────────┘
                    │ all done
                    ▼

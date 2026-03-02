@@ -17,7 +17,9 @@ MODELS=""  # comma-separated list for multi-model rotation
 TEARDOWN=false
 NO_ATTACH=false
 DRY_RUN=false
-STAMPEDE_BASE="$HOME/.copilot/stampede"
+# Run directory lives INSIDE the repo (.stampede/) so agents can access it.
+# Content exclusion policies block ~/.copilot/ but repos are always accessible.
+STAMPEDE_BASE=""  # set after REPO_PATH is known
 
 # ─── Argument Parsing ────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -110,7 +112,13 @@ do_teardown() {
     fi
 
     local session_name="stampede-${RUN_ID}"
-    local base_dir="${STAMPEDE_BASE}/${RUN_ID}"
+    # Search for run dir in repo (.stampede/) or legacy (~/.copilot/stampede/)
+    local base_dir=""
+    if [[ -n "$REPO_PATH" ]] && [[ -d "$REPO_PATH/.stampede/${RUN_ID}" ]]; then
+        base_dir="$REPO_PATH/.stampede/${RUN_ID}"
+    elif [[ -d "$HOME/.copilot/stampede/${RUN_ID}" ]]; then
+        base_dir="$HOME/.copilot/stampede/${RUN_ID}"
+    fi
 
     echo "Tearing down stampede session: $session_name"
 
@@ -190,6 +198,8 @@ if [[ ! -d "$REPO_PATH/.git" ]] && ! git -C "$REPO_PATH" rev-parse --git-dir &>/
     exit 1
 fi
 
+# Run directory inside the repo — agents can always access repo files
+STAMPEDE_BASE="$REPO_PATH/.stampede"
 BASE_DIR="${STAMPEDE_BASE}/${RUN_ID}"
 SESSION_NAME="stampede-${RUN_ID}"
 PIDS_DIR="${BASE_DIR}/pids"
