@@ -23,11 +23,9 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 > ```
 > Zero API calls. Just `tmux` and `bash`. See 8 agents work in real time.
 
-<img width="1698" height="1056" alt="Screenshot 2026-03-01 at 8 16 25 PM" src="https://github.com/user-attachments/assets/d40cab9b-f9aa-4aaf-b6a5-23b43a712ef6" />
-
 ![Terminal Stampede Demo](assets/demo.gif)
 
-*Boot sequence → command center tracking 8 agents → all tasks complete*
+*8 agents working in parallel — command center tracking progress in real time*
 
 > ⚡ **Get started for real!**
 > ```bash
