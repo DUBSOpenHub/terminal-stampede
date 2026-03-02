@@ -6,6 +6,22 @@ set -euo pipefail
 # conflict resolution (where semantic understanding matters).
 # Usage: stampede-merge.sh --run-id <id> --repo <path> [--model <model>]
 
+# ─── Validation ──────────────────────────────────────────────────────────────
+
+# Check git is available
+if ! command -v git &>/dev/null; then
+    echo "❌ Error: git is not installed or not in PATH" >&2
+    echo "   Install git to continue: https://git-scm.com/downloads" >&2
+    exit 1
+fi
+
+# Check python3 is available
+if ! command -v python3 &>/dev/null; then
+    echo "❌ Error: python3 is not installed or not in PATH" >&2
+    echo "   Install Python 3 to continue: https://www.python.org/downloads/" >&2
+    exit 1
+fi
+
 RUN_ID=""
 REPO_PATH=""
 MODEL="claude-sonnet-4.5"
@@ -26,6 +42,19 @@ done
 
 if [[ -z "$RUN_ID" ]] || [[ -z "$REPO_PATH" ]]; then
     echo "❌ --run-id and --repo are required" >&2
+    exit 1
+fi
+
+# Check that repo path exists
+if [[ ! -e "$REPO_PATH" ]]; then
+    echo "❌ Error: Repository path does not exist: $REPO_PATH" >&2
+    exit 1
+fi
+
+# Check that repo path is a git directory
+if [[ ! -d "$REPO_PATH/.git" ]]; then
+    echo "❌ Error: Not a git repository: $REPO_PATH" >&2
+    echo "   Expected a .git directory at: $REPO_PATH/.git" >&2
     exit 1
 fi
 
