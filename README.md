@@ -77,7 +77,10 @@ Three files land in their working locations:
 |------|----------|---------|
 | Orchestrator skill | `~/.copilot/skills/stampede/SKILL.md` | Parses commands, generates tasks, monitors, synthesizes |
 | Worker agent | `~/.copilot/agents/stampede-worker.agent.md` | Claims tasks, does the work, writes results |
+| Merger agent | `~/.copilot/agents/stampede-merger.agent.md` | Auto-merges all branches, resolves conflicts, shadow-scores |
 | Launcher | `~/bin/stampede.sh` | Creates tmux session, spawns panes, tracks PIDs |
+| Monitor | `~/bin/stampede-monitor.sh` | Live progress, stuck detection, runtime stats |
+| Merger script | `~/bin/stampede-merge.sh` | Discovers branches, sorts by size, launches merger |
 
 ### Run
 
@@ -157,6 +160,34 @@ When all results are in, the orchestrator checks if any two agents modified the 
 ✅ No conflicts on remaining 6 branches — ready to merge
 ```
 
+### Auto-merge with shadow scoring
+
+After all agents finish, the merger agent combines every branch into one. It merges sequentially (smallest changes first to build a clean base), resolves conflicts using AI that reads both task descriptions to understand intent, and skips anything irreconcilable.
+
+While merging, the merger silently **shadow-scores** each agent's work across 3 layers:
+
+| Layer | When | What It Measures |
+|-------|------|-----------------|
+| Runtime | During stampede | Time to complete, stuck events, files changed |
+| Merge | During merge | Conflict friendliness (clean merge vs. conflicts caused) |
+| Quality | After all merges | Completeness, scope adherence, code quality, test impact |
+
+Scores are weighted — Completeness (30%) matters most, Conflict Friendliness (10%) matters least since it's partly outside the agent's control. The agents never know they're being scored.
+
+```
+🦬 Shadow Scorecard (weighted)
+═══════════════════════════════════════════════════════════════════════════
+ Agent       Model              Comp  Scope  Qual  Conflt  Test   Total  +/-
+                                (30%)  (25%) (20%)  (10%) (15%)   /50
+ ─────────────────────────────────────────────────────────────────────────
+ task-001    claude-sonnet-4.5    10     10     8     10     5    44.2  ⚡+2
+ task-002    gpt-5.1              10     10     8     10     5    44.2
+ task-003    claude-sonnet-4.5    10     10     8     10     5    44.2  🐌-1
+═══════════════════════════════════════════════════════════════════════════
+```
+
+Scores persist across runs to `~/.copilot/stampede-model-stats.json`, building a leaderboard that shows which AI models consistently produce the best work over time.
+
 ---
 
 ## 🏇 Usage
@@ -192,7 +223,7 @@ Options:
 ┌─────────────────────────────────────────────────┐
 │  Orchestrator (SKILL.md)                        │
 │  Parses intent → generates tasks → launches     │
-│  workers → polls results → synthesizes          │
+│  agents → polls results → synthesizes           │
 └───────────┬─────────────────────────────────────┘
             │
             ▼
@@ -202,7 +233,7 @@ Options:
 └───────┬───────┬───────┬───────┬─────────────────┘
         ▼       ▼       ▼       ▼
      ┌─────┐┌─────┐┌─────┐┌─────┐
-     │  ⚡  ││  ⚡  ││  ⚡  ││  ⚡  │  Each agent: own terminal,
+     │  🦬  ││  🦬  ││  🦬  ││  🦬  │  Each agent: own terminal,
      │     ││     ││     ││     │  own 200K context, own branch
      └──┬──┘└──┬──┘└──┬──┘└──┬──┘
         │      │      │      │
@@ -210,6 +241,13 @@ Options:
    ┌─────────────────────────────────┐
    │  ~/.copilot/stampede/{run_id}/  │
    │  queue/ → claimed/ → results/  │
+   └───────────────┬─────────────────┘
+                   │ all done
+                   ▼
+   ┌─────────────────────────────────┐
+   │  Merger (stampede-merger)       │
+   │  Auto-merge → resolve conflicts│
+   │  → shadow score → leaderboard  │
    └─────────────────────────────────┘
 ```
 
@@ -220,6 +258,9 @@ Options:
 | Filesystem as message queue | Simpler than anything else. `ls queue/` is your debugger |
 | Agent for workers, skill for orchestrator | Skills load globally, agents load per-session. Clean role isolation |
 | Branch per task | No two agents touch main. Conflicts caught at synthesis |
+| Auto-merger with AI conflict resolution | Reads both task descriptions to resolve conflicts semantically, not just syntactically |
+| Weighted shadow scoring | Completeness (30%) matters most; conflict friendliness (10%) is partly luck |
+| Cross-run model leaderboard | Shows which AI models consistently produce the best work over time |
 | 500-word result cap | 8 verbose summaries would blow the orchestrator's context |
 | `--max-autopilot-continues 30` | Prevents runaway agents from burning unlimited quota |
 | Lightweight models for grunt work | Save the powerful model for synthesis, use fast ones for parallel tasks |

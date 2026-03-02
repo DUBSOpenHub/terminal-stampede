@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.2.0 — 2026-03-02
+
+### Added
+- **Auto-merger agent** (`stampede-merger.agent.md`): merges all stampede branches into a single `stampede/merged-{run_id}` branch, resolves conflicts using AI with task context, skips irreconcilable changes
+- **3-layer shadow scoring**: rates each agent's work silently during and after merge
+  - Layer 1 (Runtime): timing, stuck events, file counts — captured by monitor
+  - Layer 2 (Merge): conflict friendliness — captured during merge
+  - Layer 3 (Quality): completeness, scope adherence, code quality, test impact — AI evaluation post-merge
+- **Weighted scoring**: Completeness 30%, Scope 25%, Quality 20%, Test 15%, Conflict 10% — normalized to /50
+- **Cross-run model leaderboard**: scores persist to `~/.copilot/stampede-model-stats.json`
+- **Merge launcher** (`stampede-merge.sh`): discovers branches from results, sorts by file count, runs merger agent
+- **Runtime stats capture** in monitor: writes `runtime-stats.json` for Layer 1 scoring
+- Merge hint in monitor completion ceremony
+
+### Changed
+- Monitor alerts: bell sounds once per stuck agent (not every 5s loop)
+- Stuck agents display in red box-drawing frame instead of plain text
+- Architecture diagram updated with merger step
+- Install script now installs merger agent + merge script
+
+### Fixed
+- Model ID format: `claude-sonnet-4.5` (dots, not hyphens) in SKILL.md
+
 ## 1.1.0 — 2026-03-02
 
 ### Changed
