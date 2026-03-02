@@ -589,23 +589,26 @@ print(f"AVG_SCORE: {s.get(\"avg_score\",\"?\")}")
 
 ### Show the shadow scorecard
 
-Present scores in a formatted table:
+Present scores in a formatted table. Raw scores are 1-10 per dimension. The Total
+column uses weighted scoring (Completeness 30%, Scope 25%, Quality 20%, Test 15%,
+Conflict 10%) normalized to /50. Runtime bonuses shown separately.
 
 ```
-🦬 Shadow Scorecard
-═══════════════════════════════════════════════════════════════════════
- Agent       Model              Complete  Scope  Quality  Conflict  Test  Total
- ─────────────────────────────────────────────────────────────────────────────
- task-001    claude-sonnet-4.5     9       10       8       10       7    44/50
- task-002    claude-sonnet-4.5     7        8       9       7        7    38/50
- task-003    gpt-5.1               8        9       8       10       5    40/50
-═══════════════════════════════════════════════════════════════════════
- Average: 40.7/50  ·  Best: task-001 (44)  ·  Merged branch: stampede/merged-RUN_ID
+🦬 Shadow Scorecard (weighted)
+═══════════════════════════════════════════════════════════════════════════════════
+ Agent       Model              Complete  Scope  Quality  Conflict  Test  Total   +/-
+                                  (30%)   (25%)   (20%)    (10%)   (15%)  /50
+ ──────────────────────────────────────────────────────────────────────────────────
+ task-001    claude-sonnet-4.5     9       10       8       10       7    43.8   ⚡+2
+ task-002    claude-sonnet-4.5     7        8       9        7       7    38.3
+ task-003    gpt-5.1               8        9       8       10       5    40.0   🐌-1
+═══════════════════════════════════════════════════════════════════════════════════
+ Weighted Avg: 40.7/50  ·  Best: task-001 (45.8 adj)  ·  Branch: stampede/merged-RUN_ID
 ```
 
-If runtime stats exist (Layer 1), add bonus/penalty annotations:
-- ⚡ Speed bonus (+2) for agents that completed in under 2 minutes
-- 🐌 Stuck penalty (-1 per event) for agents that got stuck
+The +/- column shows runtime adjustments:
+- ⚡ Speed bonus (+2) for agents that completed in under 2 minutes with real work
+- 🐌 Stuck penalty (-1 per event, max -3) for agents that got stuck
 
 ### Persist model stats (cross-run tracking)
 

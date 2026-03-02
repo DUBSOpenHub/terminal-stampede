@@ -142,15 +142,34 @@ Record `conflict_score = 1`. Log the branch as skipped with the reason. Continue
 
 After ALL merges are complete, evaluate each branch's work quality. This avoids merge-order bias — every branch is scored against its own diff from main, not the accumulated merge state.
 
-### Scoring Dimensions (5 dimensions, 1-10 each, total /50)
+### Scoring Dimensions (5 dimensions, weighted, normalized to /50)
 
-| Dimension | How to Evaluate | Scoring Guide |
-|-----------|----------------|---------------|
-| **Completeness** | Check the branch diff for `TODO`, `FIXME`, `placeholder`, `not implemented`, empty function bodies, stub comments | 10 = fully implemented, real code throughout · 7 = minor TODOs but substantive work · 4 = significant placeholders · 1 = mostly stubs |
-| **Scope Adherence** | Compare files changed against the task objective from the manifest. Flag files outside the task's domain | 10 = every change directly serves the task · 7 = minor tangential changes · 4 = significant scope creep · 1 = mostly unrelated changes |
-| **Code Quality** | Read the diff. Check for: syntax errors, dead code, inconsistent naming, missing error handling, copy-paste patterns, overly complex logic | 10 = clean, idiomatic, well-structured · 7 = minor issues · 4 = significant problems · 1 = would not pass review |
-| **Conflict Friendliness** | Already captured during Phase 1 merge | 10 = clean merge · 7 = minor conflicts · 4 = major conflicts · 1 = irreconcilable |
-| **Test Impact** | Run tests on the merged branch. If no test framework exists, check if the agent added tests when appropriate | 10 = tests pass, new tests added · 7 = tests pass, no new tests · 5 = no test framework · 3 = tests fail · 1 = broke existing tests |
+Dimensions are weighted because not all signals are equally useful. Completeness
+tells you if the agent actually did the work. Conflict Friendliness is partly
+luck based on merge order. Weights reflect this.
+
+| Dimension | Weight | How to Evaluate | Scoring Guide |
+|-----------|--------|----------------|---------------|
+| **Completeness** | **30%** | Check the branch diff for `TODO`, `FIXME`, `placeholder`, `not implemented`, empty function bodies, stub comments | 10 = fully implemented, real code throughout · 7 = minor TODOs but substantive work · 4 = significant placeholders · 1 = mostly stubs |
+| **Scope Adherence** | **25%** | Compare files changed against the task objective from the manifest. Flag files outside the task's domain | 10 = every change directly serves the task · 7 = minor tangential changes · 4 = significant scope creep · 1 = mostly unrelated changes |
+| **Code Quality** | **20%** | Read the diff. Check for: syntax errors, dead code, inconsistent naming, missing error handling, copy-paste patterns, overly complex logic | 10 = clean, idiomatic, well-structured · 7 = minor issues · 4 = significant problems · 1 = would not pass review |
+| **Test Impact** | **15%** | Run tests on the merged branch. If no test framework exists, auto-downweight to 7.5% and redistribute to Completeness | 10 = tests pass, new tests added · 7 = tests pass, no new tests · 5 = no test framework · 3 = tests fail · 1 = broke existing tests |
+| **Conflict Friendliness** | **10%** | Already captured during Phase 1 merge. Partly outside agent's control (depends on what others touched and merge order) | 10 = clean merge · 7 = minor conflicts · 4 = major conflicts · 1 = irreconcilable |
+
+**Weighted total formula:**
+
+```
+weighted_total = (completeness × 0.30 + scope × 0.25 + quality × 0.20
+                  + test × 0.15 + conflict × 0.10) × 5
+```
+
+This produces a score on the /50 scale. Example: all 10s → `(10×0.30 + 10×0.25 + 10×0.20 + 10×0.15 + 10×0.10) × 5 = 50`.
+
+**No-tests adjustment:** If the repo has no test framework (no `package.json`, `pyproject.toml`, `Makefile` with test target, or `tests/` directory), redistribute Test Impact's 15% weight:
+- Completeness becomes 37.5% (was 30%)
+- Test Impact becomes 7.5% (agent still gets partial credit for adding tests proactively)
+
+Store both raw scores (1-10 per dimension) and the weighted total in the report. The raw scores let users see the breakdown; the weighted total is what the leaderboard uses.
 
 ### Scoring Procedure
 
@@ -236,14 +255,17 @@ report = {
         #     "conflicts_resolved": 0,
         #     "resolutions": [],
         #     "scores": {
-        #         "completeness": 9,
-        #         "scope_adherence": 10,
-        #         "code_quality": 8,
-        #         "conflict_friendliness": 10,
-        #         "test_impact": 7,
-        #         "total": 44,
-        #         "runtime_bonus": 2,
-        #         "adjusted_total": 46,
+        #         "completeness": 9,        # raw 1-10
+        #         "scope_adherence": 10,     # raw 1-10
+        #         "code_quality": 8,         # raw 1-10
+        #         "conflict_friendliness": 10, # raw 1-10
+        #         "test_impact": 7,          # raw 1-10
+        #         "weights": {"completeness": 0.30, "scope_adherence": 0.25,
+        #                     "code_quality": 0.20, "test_impact": 0.15,
+        #                     "conflict_friendliness": 0.10},
+        #         "weighted_total": 44.0,    # (Σ score×weight) × 5, on /50 scale
+        #         "runtime_bonus": 2,        # from Layer 1
+        #         "adjusted_total": 46.0,    # weighted_total + runtime_bonus
         #         "justifications": {
         #             "completeness": "All functions fully implemented, no placeholders",
         #             "scope_adherence": "Changes limited to auth module as specified",
