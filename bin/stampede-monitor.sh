@@ -15,7 +15,7 @@ declare -A LAST_ACTIVITY 2>/dev/null || true  # bash 3 fallback
 show_banner() {
     printf "\033[1;33m"
     echo "╔══════════════════════════════════════════════════════╗"
-    echo "║         ⚡ T E R M I N A L   S T A M P E D E ⚡      ║"
+    echo "║         🦬 T E R M I N A L   S T A M P E D E 🦬      ║"
     echo "║                                                      ║"
     echo "║  🦬  $TOTAL_TASKS tasks · $(basename "$BASE") · LIVE     ║"
     echo "╚══════════════════════════════════════════════════════╝"

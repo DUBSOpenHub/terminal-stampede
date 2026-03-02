@@ -4,7 +4,7 @@ set -euo pipefail
 # Terminal Stampede Installer
 # ⚡ 8 AI agents. One terminal. All at once.
 
-echo "⚡ Installing Terminal Stampede..."
+echo "🦬 Installing Terminal Stampede..."
 echo ""
 
 # Paths
@@ -42,7 +42,7 @@ if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
 fi
 
 echo ""
-echo "⚡ Terminal Stampede installed!"
+echo "🦬 Terminal Stampede installed!"
 echo ""
 echo "  Usage:"
 echo "    stampede.sh --run-id run-YYYYMMDD-HHMMSS --count 8 --repo ~/your-project"

@@ -378,7 +378,7 @@ done
 # ─── Fleet Status Summary ────────────────────────────────────────────────────
 echo ""
 echo "═══════════════════════════════════════════"
-echo "  STAMPEDE FLEET LAUNCHED"
+echo "  🦬 STAMPEDE FLEET LAUNCHED"
 echo "═══════════════════════════════════════════"
 echo ""
 
@@ -418,7 +418,7 @@ if ! $NO_ATTACH; then
         cat > "$ATTACH_SCRIPT" << ATTACHEOF
 #!/usr/bin/env bash
 clear
-echo "⚡ Connecting to Terminal Stampede..."
+echo "🦬 Connecting to Terminal Stampede..."
 sleep 0.5
 tmux attach -t $SESSION_NAME
 ATTACHEOF
