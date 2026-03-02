@@ -44,7 +44,7 @@ chmod +x "$BIN_DIR/stampede-merge.sh"
 echo "  ✅ Merger → $BIN_DIR/stampede-merge.sh"
 
 # Install demo
-cp "$SCRIPT_DIR/bin/stampede-demo.sh" "$BIN_DIR/stampede-demo"
+cp -f "$SCRIPT_DIR/bin/stampede-demo.sh" "$BIN_DIR/stampede-demo" 2>/dev/null || ln -sf "$SCRIPT_DIR/bin/stampede-demo.sh" "$BIN_DIR/stampede-demo"
 chmod +x "$BIN_DIR/stampede-demo"
 echo "  ✅ Demo → $BIN_DIR/stampede-demo"
 
