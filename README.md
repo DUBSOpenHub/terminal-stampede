@@ -81,8 +81,38 @@ Three files land in their working locations:
 
 ### Run
 
+**Option A: From a Copilot CLI session** (easiest)
+
+Open a Copilot CLI session and tell the stampede skill what to do:
+
+```
+stampede 8 workers on ~/my-project — add error handling, write tests, improve docs
+```
+
+The orchestrator reads your codebase, generates 8 task files, launches the fleet, and monitors progress. You watch.
+
+**Option B: From the command line** (full control)
+
+Create task files yourself, then launch:
+
 ```bash
-stampede.sh --run-id run-20260301-120000 --count 8 --repo ~/your-project --model claude-haiku-4.5
+# 1. Create a run directory
+RUN_ID="run-$(date +%Y%m%d-%H%M%S)"
+mkdir -p ~/.copilot/stampede/$RUN_ID/{queue,claimed,results,logs}
+
+# 2. Add task files (one JSON per task)
+cat > ~/.copilot/stampede/$RUN_ID/queue/task-001.json << 'EOF'
+{
+  "task_id": "task-001",
+  "description": "Add input validation to the auth module",
+  "scope": ["src/auth.py"],
+  "branch": "stampede/task-001"
+}
+EOF
+# ... repeat for each task
+
+# 3. Launch the fleet
+stampede.sh --run-id $RUN_ID --count 8 --repo ~/my-project --model claude-haiku-4.5
 ```
 
 A Terminal window opens. Eight panes tile across the screen. Gold ⚡ borders show the model and task for each agent. A monitor pane tracks progress in real time. You watch them work.
