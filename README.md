@@ -196,32 +196,30 @@ Options:
 
 ---
 
-## 📊 Real Run: What Actually Happened
+## 📊 We Pointed It at Itself
 
-One stampede, 8 agents, pointed at [ghost-ops](https://github.com/DUBSOpenHub/ghost-ops). No cherry-picking — these are the raw numbers from a single run.
+To test stampede, we pointed it at this repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the worker agent, updating the changelog, and more. Nobody touched anything. They just ran.
 
 | | Result |
 |---|---|
 | Tasks | 8 |
 | Agents | 8 (claude-haiku-4.5) |
-| Success rate | 8/8 — zero failures |
-| Coordination failures | 0 — filesystem queue, no server |
-| Code changes | +1,812 / -310 lines |
+| Wall clock | ~6 minutes |
+| Success rate | 8/8 |
+| Coordination failures | 0 |
 
-**Per-task breakdown:**
+| Task | Changes |
+|------|---------|
+| Defensive error handling for stampede.sh | +218 -33 |
+| CONTRIBUTING.md (from scratch) | +219 |
+| Worker agent hard-exit rules | +218 -33 |
+| Orchestrator failure recovery docs | +132 -1 |
+| CHANGELOG update from git history | +100 |
+| copilot-instructions.md improvements | +85 -3 |
+| Blog accuracy review | +30 -30 |
+| Install.sh: uninstall, --check, versioning | +100 |
 
-| Task | Time | Changes |
-|------|------|---------|
-| Type annotations | 3.4m | already complete |
-| Input validation | 3.7m | +72 -4 |
-| Error handling | 4.1m | +120 -28 |
-| CLI help | 4.5m | +113 -2 |
-| Test coverage | 5.6m | +297 -4 |
-| Docstrings | 32.3m | +570 -48 |
-| ELO router errors | 48.5m | +394 -152 |
-| State refactor | 83.0m | +246 -72 |
-
-6 of 8 tasks finished in under 6 minutes. Two complex tasks took longer — but they ran at the same time as everything else. Sequentially, you'd wait through all of them one by one. In parallel, you walk away and come back to everything done.
+8 branches. ~800 lines of real changes. The dumbest possible architecture — files on disk, atomic renames, no coordination server — was also the most reliable. Nothing broke. Nothing conflicted. The agents didn't even know each other existed.
 
 ---
 
