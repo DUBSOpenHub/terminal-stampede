@@ -411,20 +411,32 @@ echo "════════════════════════�
 # Opens a new Terminal window attached to the tmux session so you can watch live.
 # Use --no-attach to suppress (e.g., when called from an orchestrator skill).
 if ! $NO_ATTACH; then
+    ATTACHED=false
     if [[ "$(uname)" == "Darwin" ]]; then
         osascript -e "
             tell application \"Terminal\"
                 activate
                 do script \"tmux attach -t $SESSION_NAME\"
             end tell
-        " 2>/dev/null && echo "📺 Opened Terminal attached to $SESSION_NAME" || true
+        " 2>/dev/null && ATTACHED=true
     elif command -v gnome-terminal &>/dev/null; then
         gnome-terminal -- tmux attach -t "$SESSION_NAME" 2>/dev/null &
-        echo "📺 Opened terminal attached to $SESSION_NAME"
+        ATTACHED=true
     elif command -v xterm &>/dev/null; then
         xterm -e "tmux attach -t $SESSION_NAME" 2>/dev/null &
-        echo "📺 Opened xterm attached to $SESSION_NAME"
+        ATTACHED=true
+    fi
+
+    if $ATTACHED; then
+        echo "📺 Opened Terminal attached to $SESSION_NAME"
     else
-        echo "💡 Run: tmux attach -t $SESSION_NAME"
+        echo ""
+        echo "═══════════════════════════════════════════"
+        echo "  👀 TO WATCH YOUR AGENTS WORK:"
+        echo ""
+        echo "  tmux attach -t $SESSION_NAME"
+        echo ""
+        echo "  (Ctrl-B z to zoom a pane, Ctrl-B d to detach)"
+        echo "═══════════════════════════════════════════"
     fi
 fi
