@@ -4,6 +4,8 @@
 
 You've been doing AI coding one task at a time. Ask, wait, ask again, wait again. Terminal Stampede splits your terminal into 8 panes, drops an AI agent into each one, and lets them all charge through your codebase simultaneously. Each agent gets its own brain, its own branch, its own mission. You watch them work in real time through the gold ⚡ borders. Minutes later, everything's done.
 
+**Zero infrastructure.** No Redis, no HTTP, no Docker, no cloud. Just files on disk and tmux.
+
 📝 **[Read the full story →](BLOG.md)** *"I Split One Terminal Into 8 AI Brains. Here's What Happened."* — How Havoc Hackathon, Shadow Score, Dark Factory, and Agent X-Ray led to this experiment.
 
 ---
@@ -174,8 +176,6 @@ Options:
    │  queue/ → claimed/ → results/  │
    └─────────────────────────────────┘
 ```
-
-**Zero infrastructure.** No Redis, no HTTP, no Docker, no cloud. Just files on disk and tmux.
 
 ## 🧠 Design Decisions
 
