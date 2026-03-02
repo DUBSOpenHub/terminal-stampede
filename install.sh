@@ -43,6 +43,11 @@ cp "$SCRIPT_DIR/bin/stampede-merge.sh" "$BIN_DIR/stampede-merge.sh"
 chmod +x "$BIN_DIR/stampede-merge.sh"
 echo "  ✅ Merger → $BIN_DIR/stampede-merge.sh"
 
+# Install demo
+cp "$SCRIPT_DIR/bin/stampede-demo.sh" "$BIN_DIR/stampede-demo"
+chmod +x "$BIN_DIR/stampede-demo"
+echo "  ✅ Demo → $BIN_DIR/stampede-demo"
+
 # Check ~/bin is in PATH
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
     echo ""
