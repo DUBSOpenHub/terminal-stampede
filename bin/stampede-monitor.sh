@@ -4,8 +4,18 @@
 # Shows progress, alerts on stuck agents, celebrates completion.
 set -euo pipefail
 
-RUN_ID="${1:?Usage: stampede-monitor.sh <run-id>}"
-BASE="$HOME/.copilot/stampede/$RUN_ID"
+RUN_ID="${1:?Usage: stampede-monitor.sh <run-id> [base-dir]}"
+# Accept explicit base dir, or search for it
+if [[ -n "${2:-}" ]] && [[ -d "$2" ]]; then
+    BASE="$2"
+elif [[ -d ".stampede/$RUN_ID" ]]; then
+    BASE=".stampede/$RUN_ID"
+elif [[ -d "$HOME/.copilot/stampede/$RUN_ID" ]]; then
+    BASE="$HOME/.copilot/stampede/$RUN_ID"
+else
+    echo "ERROR: Cannot find run directory for $RUN_ID" >&2
+    exit 1
+fi
 PIDS_DIR="$BASE/pids"
 TOTAL_TASKS=$(find "$BASE/queue" "$BASE/claimed" "$BASE/results" -name "*.json" -not -name ".tmp-*" -type f 2>/dev/null | wc -l | tr -d ' ')
 STUCK_THRESHOLD=180  # seconds without progress = stuck
@@ -194,7 +204,7 @@ show_completion() {
         fi
     done
     
-    # Worker stats
+    # Agent stats
     echo ""
     echo "  ── Agents ──"
     local alive=0 dead=0
@@ -304,7 +314,7 @@ try:
     with open(stats_path) as f:
         stats = json.load(f)
 
-    # Map workers to tasks and capture file counts from results
+    # Map agents to tasks and capture file counts from results
     for rf in sorted(os.listdir(results_dir)):
         if not rf.endswith('.json') or rf.startswith('.tmp-'):
             continue

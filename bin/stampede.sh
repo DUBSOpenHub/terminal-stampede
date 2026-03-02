@@ -2,11 +2,11 @@
 # shellcheck shell=bash
 set -euo pipefail
 
-# stampede-workers.sh — Synthesized launcher for stampede worker fleet
-# Creates a tmux session with one pane per worker + a monitor pane.
+# stampede.sh — Launcher for Terminal Stampede agent fleet
+# Creates a tmux session with one pane per agent + a monitor pane.
 # Usage:
-#   stampede-workers.sh --run-id <id> --count <n> --repo <path> [--model <model>]
-#   stampede-workers.sh --teardown --run-id <id>
+#   stampede.sh --run-id <id> --count <n> --repo <path> [--model <model>]
+#   stampede.sh --teardown --run-id <id>
 
 # ─── Defaults ────────────────────────────────────────────────────────────────
 RUN_ID=""
@@ -426,7 +426,7 @@ tmux_create_session() {
 
 # Monitor pane starts the session (ensures top-left position)
 if [[ -x "$HOME/bin/stampede-monitor.sh" ]]; then
-MONITOR_CMD="$HOME/bin/stampede-monitor.sh ${RUN_ID}"
+MONITOR_CMD="$HOME/bin/stampede-monitor.sh ${RUN_ID} ${BASE_DIR}"
 tmux_create_session "$MONITOR_CMD"
 elif command -v watch &>/dev/null; then
 MONITOR_CMD="watch -n5 'printf \"\033[1;33m\"; \

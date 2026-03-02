@@ -255,9 +255,9 @@ Options:
         │      │      │      │
         ▼      ▼      ▼      ▼
    ┌─────────────────────────────────┐
-   │  ~/.copilot/stampede/{run_id}/  │
+   │  repo/.stampede/{run_id}/       │
    │  queue/ → claimed/ → results/  │
-   │  (lives in repo: .stampede/)  │
+   │                                 │
    └───────────────┬─────────────────┘
                    │ all done
                    ▼
