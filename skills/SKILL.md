@@ -308,7 +308,7 @@ with open(f"{base}/state.json", "w") as f:
 
 ## STEP 6 — LAUNCH AGENTS
 
-Invoke the launcher with `bash(mode="async", detach=true)`: <!-- Landmine #21 -->
+Invoke the launcher with `bash(mode="async", detach=true)` and `--no-attach` (the skill handles window opening): <!-- Landmine #21 -->
 
 ```bash
 chmod +x ~/bin/stampede.sh
@@ -316,16 +316,32 @@ chmod +x ~/bin/stampede.sh
   --run-id THE_RUN_ID \
   --count WORKER_COUNT \
   --repo THE_REPO_PATH \
-  --model THE_MODEL
+  --model THE_MODEL \
+  --no-attach
 ```
 
-This opens a new Terminal window attached to the tmux session so the user can watch their agents work in real time.
-
-Wait 5 seconds, then verify:
+Wait 5 seconds, then verify the tmux session exists:
 
 ```bash
 tmux has-session -t "stampede-THE_RUN_ID" 2>/dev/null && echo "FLEET_RUNNING" || echo "FLEET_FAILED"
 ```
+
+**IMMEDIATELY after confirming FLEET_RUNNING**, open a Terminal window so the user can watch. Run this with `bash` (NOT detached — needs GUI access):
+
+```bash
+ATTACH_SCRIPT=$(mktemp /tmp/stampede-attach-XXXXXX.sh)
+cat > "$ATTACH_SCRIPT" << 'EOF'
+#!/usr/bin/env bash
+clear
+echo "🦬 Connecting to Terminal Stampede..."
+sleep 0.5
+tmux attach -t stampede-THE_RUN_ID
+EOF
+chmod +x "$ATTACH_SCRIPT"
+open -a Terminal "$ATTACH_SCRIPT"
+```
+
+Tell the user: "🦬 **Stampede is running!** A Terminal window just opened showing your agents working in real time. Come back here when they're done for the full report."
 
 Update state.json phase to `"running"`. Log the event:
 
