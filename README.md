@@ -15,6 +15,8 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 📝 **[Read the full story →](BLOG.md)** *"What If You Could Run 8 AI Agents in One Terminal?"* — How Havoc Hackathon, Shadow Score, Dark Factory, and Agent X-Ray led to this experiment.
 
 ---
+<img width="1704" height="1090" alt="Screenshot 2026-03-02 at 3 04 54 PM" src="https://github.com/user-attachments/assets/ec9b3b7c-f85e-49aa-8c86-ea2f6caf1743" />
+
 
 > 🦬 **Try the demo — no setup required!**
 > ```bash
@@ -23,7 +25,7 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 > ```
 > Zero API calls. Just `tmux` and `bash`. See 8 agents work in real time.
 
-![Terminal Stampede Demo](assets/demo.gif)
+
 
 *8 agents working in parallel — command center tracking progress in real time*
 
