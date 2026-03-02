@@ -6,7 +6,7 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 **Zero infrastructure.** No Redis, no HTTP, no Docker, no cloud. Just files on disk and tmux.
 
-**You're not handing off control.** Every agent runs in a visible pane. Zoom in on any one, type into it, kill it, or just watch. Most multi-agent systems give you logs after the fact. This one puts you in the room.
+**Human in the loop, not after the fact.** Every agent runs in a visible pane. Zoom in on any one, type into it, kill it, or just watch. Most multi-agent systems give you logs when it's over. This one puts you in the room while it's happening.
 
 **tmux is the runtime.** Each pane is a full Copilot CLI session with its own 200K context window. The filesystem is the message bus — task claiming is an atomic file rename, no locks, no coordination server. Point it at any repo.
 
