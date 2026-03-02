@@ -6,7 +6,7 @@ I didn't set out to build a multi-agent orchestration framework. I was just tryi
 
 Working in the Copilot CLI, I kept wondering: when you ask two AI models to do the same task, how do you actually know which one did a better job? Not vibes. Not "this one feels smarter." Something measurable.
 
-That became [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon) — a skill that pits up to 14 AI models against each other in tournament elimination. Sealed judges, ELO ratings, evolution between rounds. I've run 37 of these now. The leaderboard has real data on which models are good at what.
+That became [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon) — a skill that pits up to 14 AI models against each other in tournament elimination. Sealed judges, ELO ratings, evolution between rounds. The leaderboard has real data on which models are good at what.
 
 ## Then came the measuring stick
 

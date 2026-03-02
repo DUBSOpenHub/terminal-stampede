@@ -237,8 +237,6 @@ Built during a [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon)
 
 ## 🐙 Built with Love
 
-Created with 💜 by @DUBSOpenHub with the GitHub Copilot CLI.
-
-Let's build! 🚀✨
+Created with 💜 by [DUBSOpenHub](https://github.com/DUBSOpenHub) to help more people discover the joy of GitHub Copilot CLI.
 
 **Let's build!** 🚀✨
