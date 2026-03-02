@@ -219,7 +219,7 @@ To test stampede, we pointed it at this repo. 8 agents ran simultaneously on the
 | Blog accuracy review | +30 -30 |
 | Install.sh: uninstall, --check, versioning | +100 |
 
-8 branches. ~800 lines of real changes. The dumbest possible architecture — files on disk, atomic renames, no coordination server — was also the most reliable. Nothing broke. Nothing conflicted. The agents didn't even know each other existed.
+8 branches. ~800 lines of real changes. The simplest possible architecture — files on disk, atomic renames, no coordination server — was also the most reliable. Nothing broke. Nothing conflicted. The agents didn't even know each other existed.
 
 ---
 
