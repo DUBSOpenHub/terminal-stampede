@@ -17,7 +17,7 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 ---
 
 ![Terminal Stampede in action](docs/stampede-demo.gif)
-*8 agents working in parallel — monitor pane tracking progress, workers editing code across the codebase*
+*8 agents working in parallel — monitor pane tracking progress, agents editing code across the codebase*
 
 > ⚡ **Get started fast!**
 > ```bash
@@ -86,7 +86,7 @@ Three files land in their working locations:
 Open a Copilot CLI session and tell the stampede skill what to do:
 
 ```
-stampede 8 workers on ~/my-project — add error handling, write tests, improve docs
+stampede 8 agents on ~/my-project — add error handling, write tests, improve docs
 ```
 
 The orchestrator reads your codebase, generates 8 task files, launches the fleet, and monitors progress. You watch.

@@ -2,8 +2,8 @@
 name: stampede
 description: >
   Cross-terminal multi-agent orchestration. Splits complex tasks into parallel
-  work units stampedeed to independent Copilot CLI workers via tmux panes with
-  filesystem IPC, atomic operations, dead worker recovery, and conflict-aware synthesis.
+  work units dispatched to independent Copilot CLI agents via tmux panes with
+  filesystem IPC, atomic operations, dead agent recovery, and conflict-aware synthesis.
 tools:
   - bash
   - grep
@@ -20,25 +20,28 @@ tools:
 
 # Stampede — Multi-Agent Orchestrator
 
-You are the orchestrator for a fleet of autonomous AI workers running in separate
-tmux panes. You decompose user requests into parallel tasks, stampede them via
-filesystem IPC, monitor progress, recover dead workers, and synthesize results.
+You are the orchestrator for a fleet of autonomous AI agents running in separate
+tmux panes. You decompose user requests into parallel tasks, dispatch them via
+filesystem IPC, monitor progress, recover dead agents, and synthesize results.
 
-**You are a SKILL. Workers are AGENTS. Never confuse the two.**
+**You are a SKILL. Agents run in separate terminal panes. Never confuse the two.**
 
 ## Command Grammar
 
 | Pattern | Action |
 |---------|--------|
-| `stampede [N workers on] REPO [with model MODEL] [: task descriptions]` | Launch new run |
+| `stampede [N agents on] REPO [with model MODEL] [: task descriptions]` | Launch new run |
 | `stampede resume [RUN_ID]` | Resume interrupted run |
 | `stampede status [RUN_ID]` | Show run status |
-| `stampede teardown [RUN_ID]` | Tear down workers and clean up |
+| `stampede teardown [RUN_ID]` | Tear down agents and clean up |
 
-**Defaults:** workers = 3 (max 8), model = `claude-sonnet-4-5`, repo = cwd
+**Defaults:** agents = 3 (max 8), model = `claude-sonnet-4-5`, repo = cwd
 
 If tasks are listed after `:` (semicolon-separated), create one task per description.
 If no tasks given, analyze the repo and auto-generate them.
+
+**Greeting:** When the user says just "stampede" with no arguments, use `ask_user` with:
+> "Stampede is ready to go. What do you want the fleet to work on? Give me a repo and a task — for example: `stampede 8 agents on ~/dev/my-app : add unit tests; fix linting errors; update docs`"
 
 ---
 
@@ -101,12 +104,12 @@ Extract from the user's natural-language prompt:
 |---|---|---|
 | `objective` | what the user wants done | *(required)* |
 | `repo_path` | repository path (resolve `~`) | cwd |
-| `worker_count` | "N workers" | 3 (max 8) |
+| `worker_count` | "N agents" | 3 (max 8) |
 | `model` | "with model X" | claude-sonnet-4-5 |
 
 If `stampede resume [RUN_ID]` → skip to STEP 9.
 If `stampede status` → query SQL + filesystem, report.
-If `stampede teardown [RUN_ID]` → run `~/bin/stampede-workers.sh --teardown --run-id RUN_ID`.
+If `stampede teardown [RUN_ID]` → run `~/bin/stampede.sh --teardown --run-id RUN_ID`.
 If ambiguous → use `ask_user` to clarify scope and objective.
 
 ### Objective Templates
@@ -156,7 +159,7 @@ All coordination uses these directories — zero infrastructure, pure filesystem
 
 ## STEP 3 — GATHER REPO CONTEXT
 
-Collect context ONCE. Embed in every manifest so workers start warm. <!-- Landmine #8 -->
+Collect context ONCE. Embed in every manifest so agents start warm. <!-- Landmine #8 -->
 
 ```bash
 cd REPO_PATH
@@ -308,8 +311,8 @@ with open(f"{base}/state.json", "w") as f:
 Invoke the launcher with `bash(mode="async", detach=true)`: <!-- Landmine #21 -->
 
 ```bash
-chmod +x ~/bin/stampede-workers.sh
-~/bin/stampede-workers.sh \
+chmod +x ~/bin/stampede.sh
+~/bin/stampede.sh \
   --run-id THE_RUN_ID \
   --count WORKER_COUNT \
   --repo THE_REPO_PATH \
@@ -607,12 +610,12 @@ Offer: `stampede teardown RUN_ID`, `stampede resume RUN_ID`, branch links.
 | 5 | Re-queue infinite loop | `max_generation = 2` cap, then mark failed |
 | 6 | Overlapping file scopes | Non-overlapping decomposition + conflict detection |
 | 7 | Git merge conflicts | Detect overlapping files_changed; abort and flag |
-| 8 | Cold workers | Repo context (README, tree, test cmd) in manifests |
+| 8 | Cold agents | Repo context (README, tree, test cmd) in manifests |
 | 9 | Stale PID files | Removed after dead worker detection |
 | 10 | State lost on crash | state.json persisted at every phase transition |
 | 11 | SQL not initialized | IF NOT EXISTS on every invocation |
 | 12 | tmux session leak | Teardown; launcher checks for existing |
-| 13 | Autopilot runaway | `--max-autopilot-continues 30` on workers |
+| 13 | Autopilot runaway | `--max-autopilot-continues 30` on agents |
 | 14 | 500-word result blowup | Enforced in worker constraints and agent |
 | 15 | Task injection | Verify `run_id` matches when reading files |
 | 16 | PID ≠ worker PID | Process tree walking finds leaf PID |
@@ -630,11 +633,11 @@ Offer: `stampede teardown RUN_ID`, `stampede resume RUN_ID`, branch links.
 - [ ] SQL tables exist (STEP 0)
 - [ ] Run directory with all 5 subdirectories
 - [ ] Task manifests are valid JSON in queue/
-- [ ] `~/bin/stampede-workers.sh` is executable
+- [ ] `~/bin/stampede.sh` is executable
 - [ ] `~/.copilot/agents/stampede-worker.agent.md` is installed
 - [ ] tmux is available
 - [ ] Target repo has .git directory
-- [ ] `--max-autopilot-continues 30` on workers
+- [ ] `--max-autopilot-continues 30` on agents
 - [ ] Worker model configured (default: claude-sonnet-4-5)
 
 ## COMPLETION CRITERIA
