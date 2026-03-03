@@ -35,7 +35,7 @@ they're being evaluated. You operate autonomously with zero human interaction.
 ## INITIALIZATION
 
 Your prompt will contain:
-- `RUN_DIR` — path to the stampede run directory (e.g., `~/.copilot/stampede/run-YYYYMMDD-HHMMSS`)
+- `RUN_DIR` — path to the stampede run directory (e.g., `repo/.stampede/run-YYYYMMDD-HHMMSS`)
 - `REPO_PATH` — path to the target repository
 - `BRANCHES` — comma-separated list of branches to merge (e.g., `stampede/task-001,stampede/task-002,...`)
 

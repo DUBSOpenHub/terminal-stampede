@@ -2,7 +2,7 @@
 name: stampede
 description: >
   Cross-terminal multi-agent orchestration. Splits complex tasks into parallel
-  work units dispatched to independent Copilot CLI agents via tmux panes with
+  work units dispatched to independent CLI coding agents via tmux panes with
   filesystem IPC, atomic operations, dead agent recovery, and conflict-aware synthesis.
 tools:
   - bash
@@ -692,7 +692,7 @@ After showing the scorecard, update the persistent model stats file:
 python3 -c '
 import json, os, time
 
-stats_path = os.path.expanduser("~/.copilot/stampede-model-stats.json")
+stats_path = os.path.expanduser("~/.stampede/model-stats.json")
 report_path = "THE_BASE_DIR/merge-report.json"
 
 # Load existing stats or initialize
@@ -855,7 +855,7 @@ Offer: `stampede teardown RUN_ID`, `stampede resume RUN_ID`, branch links.
 - [ ] Run directory with all 5 subdirectories
 - [ ] Task manifests are valid JSON in queue/
 - [ ] `~/bin/stampede.sh` is executable
-- [ ] `~/.copilot/agents/stampede-worker.agent.md` is installed
+- [ ] `~/.stampede/agents/stampede-worker.agent.md` is installed (or equivalent for your CLI agent)
 - [ ] tmux is available
 - [ ] Target repo has .git directory
 - [ ] `--max-autopilot-continues 30` on agents

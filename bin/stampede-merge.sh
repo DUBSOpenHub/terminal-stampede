@@ -60,13 +60,15 @@ if [[ ! -d "$REPO_PATH/.git" ]]; then
     exit 1
 fi
 
-# Run directory inside the repo (or legacy ~/.copilot/stampede/)
+# Run directory inside the repo (or legacy ~/.copilot/stampede/ or ~/.stampede/)
 if [[ -d "$REPO_PATH/.stampede/$RUN_ID" ]]; then
     BASE_DIR="$REPO_PATH/.stampede/$RUN_ID"
 elif [[ -d "$HOME/.copilot/stampede/$RUN_ID" ]]; then
     BASE_DIR="$HOME/.copilot/stampede/$RUN_ID"
+elif [[ -d "$HOME/.stampede/$RUN_ID" ]]; then
+    BASE_DIR="$HOME/.stampede/$RUN_ID"
 else
-    echo "❌ Run directory not found in repo or ~/.copilot/stampede/" >&2
+    echo "❌ Run directory not found in repo or ~/.stampede/" >&2
     exit 1
 fi
 RESULTS_DIR="$BASE_DIR/results"
@@ -553,9 +555,16 @@ if len(report["model_scores"]) > 1:
     print()
 
 # ─── Persist Cross-Run Model Stats ───────────────────────────────────────────
-stats_path = os.path.expanduser("~/.copilot/stampede-model-stats.json")
-if os.path.exists(stats_path):
-    with open(stats_path) as f:
+stats_path = os.path.expanduser("~/.stampede/model-stats.json")
+os.makedirs(os.path.dirname(stats_path), exist_ok=True)
+# Also check legacy path
+legacy_path = os.path.expanduser("~/.copilot/stampede-model-stats.json")
+if not os.path.exists(stats_path) and os.path.exists(legacy_path):
+    stats_path_to_read = legacy_path
+else:
+    stats_path_to_read = stats_path
+if os.path.exists(stats_path_to_read):
+    with open(stats_path_to_read) as f:
         stats = json.load(f)
 else:
     stats = {"models": {}, "runs": 0, "updated": None}

@@ -61,9 +61,12 @@ worker_id = "worker-" + subprocess.check_output(
 print(f"WORKER_ID={worker_id}")
 
 # Auto-discover active stampede run
-# Check in-repo .stampede/ first (preferred), then legacy ~/.copilot/stampede/
+# Check in-repo .stampede/ first (preferred), then ~/.stampede/, then legacy ~/.copilot/stampede/
 cwd = os.getcwd()
 candidates = sorted(glob.glob(f"{cwd}/.stampede/run-*/queue/*.json"), reverse=True)
+if not candidates:
+    stampede_dir = os.path.expanduser("~/.stampede")
+    candidates = sorted(glob.glob(f"{stampede_dir}/run-*/queue/*.json"), reverse=True)
 if not candidates:
     stampede_dir = os.path.expanduser("~/.copilot/stampede")
     candidates = sorted(glob.glob(f"{stampede_dir}/run-*/queue/*.json"), reverse=True)

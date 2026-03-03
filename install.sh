@@ -3,11 +3,14 @@ set -euo pipefail
 
 # Terminal Stampede Installer
 # ⚡ 8 AI agents. One terminal. All at once.
+# Works with any CLI coding agent. Skill/agent files install to
+# ~/.copilot/ for GitHub Copilot CLI users.
 
 echo "🦬 Installing Terminal Stampede..."
 echo ""
 
-# Paths
+# Paths — skill/agent files go to ~/.copilot/ (Copilot CLI format)
+# Shell scripts go to ~/bin/ (CLI-agnostic)
 SKILL_DIR="$HOME/.copilot/skills/stampede"
 AGENT_DIR="$HOME/.copilot/agents"
 BIN_DIR="$HOME/bin"
@@ -55,6 +58,9 @@ fi
 
 echo ""
 echo "🦬 Terminal Stampede installed!"
+echo ""
+echo "  📋 Copilot CLI skill/agents → ~/.copilot/"
+echo "  📋 Shell scripts (CLI-agnostic) → ~/bin/"
 echo ""
 echo "  Launching demo..."
 echo ""

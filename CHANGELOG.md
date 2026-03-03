@@ -9,7 +9,7 @@
   - Layer 2 (Merge): conflict friendliness — captured during merge
   - Layer 3 (Quality): completeness, scope adherence, code quality, test impact — AI evaluation post-merge
 - **Weighted scoring**: Completeness 30%, Scope 25%, Quality 20%, Test 15%, Conflict 10% — normalized to /50
-- **Cross-run model leaderboard**: scores persist to `~/.copilot/stampede-model-stats.json`
+- **Cross-run model leaderboard**: scores persist to `~/.stampede/model-stats.json`
 - **Merge launcher** (`stampede-merge.sh`): discovers branches from results, sorts by file count, runs merger agent
 - **Runtime stats capture** in monitor: writes `runtime-stats.json` for Layer 1 scoring
 - Merge hint in monitor completion ceremony

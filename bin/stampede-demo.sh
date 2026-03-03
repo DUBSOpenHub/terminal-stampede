@@ -470,8 +470,8 @@ printf "  \${G}Zero infrastructure.\${R}  \${TX}No Redis, no Docker, no cloud. J
 printf "  \${G}Human in the loop.\${R}    \${TX}Every agent runs in a visible pane. Zoom in, type\${R}\n"
 printf "                          \${TX}into it, or just watch. You're in the room while\${R}\n"
 printf "                          \${TX}it's happening.\${R}\n"
-printf "  \${G}tmux is the runtime.\${R}  \${TX}Each pane is a full Copilot CLI session with its\${R}\n"
-printf "                          \${TX}own 200K context window. The filesystem is the\${R}\n"
+printf "  \${G}tmux is the runtime.\${R}  \${TX}Each pane is a full CLI agent session with its\${R}\n"
+printf "                          \${TX}own context window. The filesystem is the\${R}\n"
 printf "                          \${TX}message bus. Point it at any repo.\${R}\n"
 printf "\n"
 sleep 6

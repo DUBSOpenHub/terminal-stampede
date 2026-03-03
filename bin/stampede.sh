@@ -18,6 +18,7 @@ TEARDOWN=false
 NO_ATTACH=false
 DRY_RUN=false
 PREFLIGHT=false
+AGENT_CMD=""  # Custom CLI agent command (default: GitHub Copilot CLI)
 # Run directory lives INSIDE the repo (.stampede/) so agents can access it.
 # Content exclusion policies block ~/.copilot/ but repos are always accessible.
 STAMPEDE_BASE=""  # set after REPO_PATH is known
@@ -34,6 +35,7 @@ while [[ $# -gt 0 ]]; do
         --no-attach) NO_ATTACH=true;    shift   ;;
         --dry-run)   DRY_RUN=true;      shift   ;;
         --preflight) PREFLIGHT=true;    shift   ;;
+        --agent-cmd) AGENT_CMD="$2";    shift 2 ;;
         -h|--help)
             echo "Usage: $0 --run-id <id> --count <n> --repo <path> [--model <model>] [--models m1,m2,m3]"
             echo ""
@@ -47,6 +49,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --no-attach        Don't auto-attach to tmux session"
             echo "  --dry-run          Show what would run without creating the session"
             echo "  --preflight        Test that agents can access the queue before launching"
+            echo "  --agent-cmd <cmd>  Custom CLI agent command template (default: GitHub Copilot CLI)"
+            echo "                     Use {prompt} and {model} as placeholders."
+            echo "                     Example: --agent-cmd 'claude -p \"{prompt}\"'"
             echo "  -h, --help         Show this help"
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -70,8 +75,8 @@ find_leaf_pid() {
 # Landmine #22: missing prereqs cause silent fleet no-ops.
 check_prereqs() {
     local fail=0
-    local bins=(tmux gh python3 jq openssl git bash)
-    local optional_bins=(watch)
+    local bins=(tmux python3 jq openssl git bash)
+    local optional_bins=(watch gh)
 
     for bin in "${bins[@]}"; do
         if command -v "$bin" &>/dev/null; then
@@ -90,13 +95,20 @@ check_prereqs() {
         fi
     done
 
-    if command -v gh &>/dev/null; then
-        if gh copilot --help &>/dev/null 2>&1; then
-            echo "  ✅ gh copilot extension"
+    # gh copilot is optional — only needed if using Copilot CLI as the agent
+    if [[ -z "$AGENT_CMD" ]]; then
+        if command -v gh &>/dev/null; then
+            if gh copilot --help &>/dev/null 2>&1; then
+                echo "  ✅ gh copilot extension (default agent)"
+            else
+                echo "  ⚠️  gh copilot extension not found (install with: gh extension install github/gh-copilot)"
+                echo "     Or use --agent-cmd to specify a different CLI agent"
+            fi
         else
-            echo "  ❌ gh copilot extension (run: gh extension install github/gh-copilot)" >&2
-            fail=1
+            echo "  ⚠️  gh — not found (needed for default Copilot CLI agent, or use --agent-cmd)"
         fi
+    else
+        echo "  ✅ Custom agent command configured"
     fi
 
     if [[ "$fail" -eq 1 ]]; then
@@ -119,8 +131,12 @@ do_teardown() {
     local base_dir=""
     if [[ -n "$REPO_PATH" ]] && [[ -d "$REPO_PATH/.stampede/${RUN_ID}" ]]; then
         base_dir="$REPO_PATH/.stampede/${RUN_ID}"
+    elif [[ -d "$REPO_PATH/.stampede/${RUN_ID}" ]]; then
+        base_dir="$REPO_PATH/.stampede/${RUN_ID}"
     elif [[ -d "$HOME/.copilot/stampede/${RUN_ID}" ]]; then
         base_dir="$HOME/.copilot/stampede/${RUN_ID}"
+    elif [[ -d "$HOME/.stampede/${RUN_ID}" ]]; then
+        base_dir="$HOME/.stampede/${RUN_ID}"
     fi
 
     echo "Tearing down stampede session: $session_name"
@@ -208,29 +224,35 @@ do_preflight() {
     echo "stampede-preflight-ok" > "$canary"
 
     local agent_output
-    agent_output=$(cd "$REPO_PATH" && gh copilot -- \
-        --agent stampede-worker \
-        --model "${MODEL}" \
-        --allow-all-tools \
-        --autopilot \
-        --max-autopilot-continues 2 \
-        --no-ask-user \
-        -p "Read the file at $canary and print its contents. Only print the file contents, nothing else." 2>&1 | head -20)
-
-    rm -f "$canary"
-
-    if echo "$agent_output" | grep -q "stampede-preflight-ok"; then
-        echo "  ✅ Agent can read queue directory"
-    elif echo "$agent_output" | grep -qi "permission denied\|content exclusion"; then
-        echo "  ❌ Agent BLOCKED by content exclusion policy"
-        echo "     The queue is at: $BASE_DIR"
-        echo "     Agents cannot read files outside the repo."
-        echo ""
-        echo "  💡 Fix: ensure .stampede/ is inside the repo (not ~/.copilot/)"
-        fail=1
+    if [[ -n "$AGENT_CMD" ]]; then
+        echo "  ⚠️  Custom agent command — skipping automated access test"
+        echo "     Verify your agent can read: $BASE_DIR/queue/"
+        rm -f "$canary"
     else
-        echo "  ⚠️  Agent response unclear — check manually:"
-        echo "$agent_output" | head -5 | sed 's/^/     /'
+        agent_output=$(cd "$REPO_PATH" && gh copilot -- \
+            --agent stampede-worker \
+            --model "${MODEL}" \
+            --allow-all-tools \
+            --autopilot \
+            --max-autopilot-continues 2 \
+            --no-ask-user \
+            -p "Read the file at $canary and print its contents. Only print the file contents, nothing else." 2>&1 | head -20)
+
+        rm -f "$canary"
+
+        if echo "$agent_output" | grep -q "stampede-preflight-ok"; then
+            echo "  ✅ Agent can read queue directory"
+        elif echo "$agent_output" | grep -qi "permission denied\|content exclusion"; then
+            echo "  ❌ Agent BLOCKED by content exclusion policy"
+            echo "     The queue is at: $BASE_DIR"
+            echo "     Agents cannot read files outside the repo."
+            echo ""
+            echo "  💡 Fix: ensure .stampede/ is inside the repo (not ~/.copilot/)"
+            fail=1
+        else
+            echo "  ⚠️  Agent response unclear — check manually:"
+            echo "$agent_output" | head -5 | sed 's/^/     /'
+        fi
     fi
 
     # 5. Model availability
@@ -412,8 +434,18 @@ build_worker_cmd() {
     local worker_model
     worker_model=$(get_worker_model "$worker_num")
     local prompt="You are stampede worker #${worker_num} for run ${RUN_ID}. FOLLOW YOUR AGENT INSTRUCTIONS EXACTLY. Claim ONE task at a time from ${BASE_DIR}/queue/ via atomic mv to ${BASE_DIR}/claimed/. Fully complete each task before claiming the next. Write results atomically to ${BASE_DIR}/results/. Log to ${BASE_DIR}/logs/. Your repo is ${REPO_PATH}. Work until queue is empty then exit."
-    # --autopilot works with -p (prompt mode); keeps going autonomously
-    echo "cd ${REPO_PATH} && echo '⚡ ${worker_model} · Claiming task...' && gh copilot -- --agent stampede-worker --model ${worker_model} --allow-all-tools --autopilot --max-autopilot-continues 30 --no-ask-user -p \"${prompt}\"; echo '⚡ Done.'; sleep 86400"
+
+    if [[ -n "$AGENT_CMD" ]]; then
+        # Custom CLI agent command — substitute {prompt} and {model} placeholders
+        local cmd="${AGENT_CMD}"
+        cmd="${cmd//\{prompt\}/$prompt}"
+        cmd="${cmd//\{model\}/$worker_model}"
+        echo "cd ${REPO_PATH} && echo '⚡ ${worker_model} · Claiming task...' && ${cmd}; echo '⚡ Done.'; sleep 86400"
+    else
+        # Default: GitHub Copilot CLI
+        # --autopilot works with -p (prompt mode); keeps going autonomously
+        echo "cd ${REPO_PATH} && echo '⚡ ${worker_model} · Claiming task...' && gh copilot -- --agent stampede-worker --model ${worker_model} --allow-all-tools --autopilot --max-autopilot-continues 30 --no-ask-user -p \"${prompt}\"; echo '⚡ Done.'; sleep 86400"
+    fi
 }
 
 # ─── Create tmux Session with Monitor as pane 0 (top-left) ───────────────────

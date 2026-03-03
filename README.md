@@ -14,7 +14,7 @@
   <img src="assets/stampede-agents.gif" alt="8 AI agents coding simultaneously in Terminal Stampede" width="1200" />
 </p>
 
-**A parallel agent runtime for your terminal.** Run up to 20 AI coding agents simultaneously, each in its own tmux pane with its own context window and git branch. Works with any CLI agent that can take a prompt and write code.
+**A parallel agent runtime for your terminal.** Run up to 20 AI coding agents simultaneously, each in its own tmux pane with its own context window and git branch. Works with any CLI agent that can take a prompt and write code. The sweet spot is 6–8 agents (the default is 3; configurable with `--count`).
 
 - 🏠 **Zero-infrastructure local swarm**
 - 🖥️ **tmux as execution surface**
@@ -67,19 +67,11 @@ Six files land in their working locations:
 | Monitor | `~/bin/stampede-monitor.sh` | Live progress, stuck detection, runtime stats |
 | Merger script | `~/bin/stampede-merge.sh` | Discovers branches, sorts by size, launches merger |
 
+> **Note:** The skill and agent files install to `~/.copilot/` paths for GitHub Copilot CLI. If you use a different CLI agent (Aider, Claude Code, etc.), you only need the shell scripts in `~/bin/` — see Option B below.
+
 ### Run
 
-**Option A: From a Copilot CLI session** (if using GitHub Copilot)
-
-Open a Copilot CLI session and tell the stampede skill what to do:
-
-```
-stampede 8 agents on ~/my-project — add error handling, write tests, improve docs
-```
-
-The orchestrator reads your codebase, generates task files, launches the fleet, and monitors progress. You watch.
-
-**Option B: From the command line** (full control)
+**Option A: From the command line** (works with any CLI agent)
 
 Create task files yourself, then launch:
 
@@ -105,6 +97,26 @@ stampede.sh --run-id $RUN_ID --count 8 --repo ~/my-project --model claude-haiku-
 ```
 
 A Terminal window opens. Eight panes tile across the screen. Gold ⚡ borders show the model and task for each agent. A monitor pane tracks progress in real time. You watch them work.
+
+By default, workers launch with GitHub Copilot CLI. To use a different CLI agent, pass `--agent-cmd`:
+
+```bash
+# Claude Code
+stampede.sh --run-id $RUN_ID --count 8 --repo ~/my-project --agent-cmd 'claude -p "{prompt}"'
+
+# Aider
+stampede.sh --run-id $RUN_ID --count 8 --repo ~/my-project --agent-cmd 'aider --message "{prompt}"'
+```
+
+**Option B: From a Copilot CLI session** (if using GitHub Copilot CLI)
+
+Open a Copilot CLI session and tell the stampede skill what to do:
+
+```
+stampede 8 agents on ~/my-project — add error handling, write tests, improve docs
+```
+
+The orchestrator reads your codebase, generates task files, launches the fleet, and monitors progress. You watch.
 
 ---
 
@@ -233,7 +245,7 @@ Scores are weighted — Completeness (30%) matters most, Conflict Friendliness (
 ═══════════════════════════════════════════════════════════════════════════
 ```
 
-Scores persist across runs to `~/.copilot/stampede-model-stats.json`, building a leaderboard that shows which AI models consistently produce the best work over time.
+Scores persist across runs to `~/.stampede/model-stats.json`, building a leaderboard that shows which AI models consistently produce the best work over time.
 
 ### Which AI model is actually best for your codebase?
 
@@ -258,7 +270,7 @@ The stampede leaderboard answers that question empirically. Every run shadow-sco
 ## 🏇 Usage
 
 ```
-stampede.sh --run-id <id> --count <n> --repo <path> [--model <model>]
+stampede.sh --run-id <id> --count <n> --repo <path> [--model <model>] [--agent-cmd <cmd>]
 stampede.sh --teardown --run-id <id>
 
 Options:
@@ -266,6 +278,8 @@ Options:
   --count       Number of agents (1-20, sweet spot: 6-8)
   --repo        Path to any git repository
   --model       AI model (default: claude-haiku-4.5)
+  --agent-cmd   Custom CLI agent command (default: GitHub Copilot CLI)
+                Use {prompt} and {model} as placeholders.
   --teardown    Kill agents, clean up
   --no-attach   Don't auto-open Terminal window
 ```
@@ -326,13 +340,13 @@ Options:
 | Decision | Why |
 |----------|-----|
 | Filesystem as message queue | Simpler than anything else. `ls queue/` is your debugger |
-| Agents for tasks, skill for orchestrator | Skills load globally, agents load per-session. Clean role isolation |
+| Agents for tasks, skill for orchestrator | Skills load globally, agents load per-session. Clean role isolation. Skill/agent format is Copilot CLI; shell scripts work with any CLI agent |
 | Branch per task | No two agents touch main. Conflicts caught at synthesis |
 | Auto-merger with AI conflict resolution | Reads both task descriptions to resolve conflicts semantically, not just syntactically |
 | Weighted shadow scoring | Completeness (30%) matters most; conflict friendliness (10%) is partly luck |
 | Cross-run model leaderboard | Shows which AI models consistently produce the best work over time |
 | 500-word result cap | Verbose summaries would blow the orchestrator's context |
-| `--max-autopilot-continues 30` | Prevents runaway agents from burning unlimited quota |
+| `--max-autopilot-continues 30` | Prevents runaway agents from burning unlimited quota (Copilot CLI flag; other CLIs have their own limits) |
 | Lightweight models for grunt work | Save the powerful model for synthesis, use fast ones for parallel tasks |
 
 ---

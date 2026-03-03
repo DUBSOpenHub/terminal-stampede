@@ -12,6 +12,8 @@ elif [[ -d ".stampede/$RUN_ID" ]]; then
     BASE=".stampede/$RUN_ID"
 elif [[ -d "$HOME/.copilot/stampede/$RUN_ID" ]]; then
     BASE="$HOME/.copilot/stampede/$RUN_ID"
+elif [[ -d "$HOME/.stampede/$RUN_ID" ]]; then
+    BASE="$HOME/.stampede/$RUN_ID"
 else
     echo "ERROR: Cannot find run directory for $RUN_ID" >&2
     exit 1
@@ -224,8 +226,8 @@ show_completion() {
     printf "\033[1;36m"
     echo "╔══════════════════════════════════════════════════════╗"
     echo "║                                                      ║"
-    echo "║  👈 Go back to your Copilot CLI session for the      ║"
-    echo "║     full report, shadow scores, and auto-merge.      ║"
+    echo "║  👈 Go back to your CLI session for the full         ║"
+    echo "║     report, shadow scores, and auto-merge.            ║"
     echo "║                                                      ║"
     echo "║  🦬 Auto-merge available — merges all branches into  ║"
     echo "║     one and scores each agent's work quality.        ║"
@@ -234,8 +236,8 @@ show_completion() {
     printf "\033[0m"
     echo ""
     printf "\033[2m"
-    echo "  To run another stampede, just type 'stampede' in"
-    echo "  your Copilot CLI and go again. 🦬"
+    echo "  To run another stampede, launch stampede.sh or"
+    echo "  type 'stampede' in your CLI agent and go again. 🦬"
     echo ""
     echo "  This window will close automatically in 60 seconds."
     echo "  Press any key to close now."
