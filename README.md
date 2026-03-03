@@ -158,6 +158,10 @@ Every multi-agent framework out there (LangGraph, CrewAI, AutoGen) runs agents a
 
 Terminal Stampede does something different. Each agent is a fully independent CLI session running in its own tmux pane with its own context window. It can read code, edit files, run tests, see failures, and fix them. No other agent is competing for its attention.
 
+> **Each agent = one tmux pane = one independent CLI session = one git branch.** They share nothing — no memory, no context, no files in progress. Twenty agents means twenty completely isolated AI coding sessions running side by side.
+
+Branches are named `stampede/task-001`, `stampede/task-002`, etc. After a run, the merger combines them into `stampede/merged-{run_id}`. Task branches stay around for inspection until you clean up with `--teardown`.
+
 The "message queue" is just files on disk. The "orchestrator" is just a script. The "agent runtime" is just your terminal. Point it at any repo.
 
 ---
