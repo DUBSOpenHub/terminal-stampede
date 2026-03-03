@@ -73,8 +73,6 @@ This is an experiment, not a product. Things I don't know yet:
 
 **How far does the filesystem queue scale?** For 8-20 agents it's fine. For 100? Probably not. But 100 parallel AI agents on one repo is a problem I'm happy to have later.
 
-**Is the orchestrator skill reliable as a live invocation?** I've been building manifests manually and calling the launcher directly. The skill file describes how to parse natural language commands, but it hasn't been battle-tested as a real "say stampede and it works" experience yet.
-
 ## The insight I keep coming back to
 
 Every multi-agent framework I've seen treats agents as function calls. They're threads in a process, sharing memory, sharing an API connection, taking turns. That's concurrency.
