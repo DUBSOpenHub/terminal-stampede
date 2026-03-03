@@ -18,6 +18,19 @@
 - 📂 **Filesystem as atomic message bus**
 - 👀 **Human-in-the-loop observability**
 - 🎯 **[Shadow scoring](https://github.com/DUBSOpenHub/shadow-score-spec)** — quality defined before agents run, measured silently after
+
+```
+🦬 Shadow Scorecard (weighted)
+═══════════════════════════════════════════════════════════════════════════
+ Agent       Model              Comp  Scope  Qual  Conflt  Test   Total  +/-
+                                (30%)  (25%) (20%)  (10%) (15%)   /50
+ ─────────────────────────────────────────────────────────────────────────
+ task-001    claude-sonnet-4.5    10     10     8     10     5    44.2  ⚡+2
+ task-002    gpt-5.1              10     10     8     10     5    44.2
+ task-003    claude-sonnet-4.5    10     10     8     10     5    44.2  🐌-1
+═══════════════════════════════════════════════════════════════════════════
+```
+
 - 🧱 **Simplicity over complexity** — no frameworks, no servers, no message brokers. The simpler the system, the more reliable the output.
 
 ---
