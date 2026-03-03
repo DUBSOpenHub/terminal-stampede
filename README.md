@@ -6,6 +6,9 @@
 > cd terminal-stampede && ./install.sh
 > ```
 > Zero API calls. Just `tmux` and `bash`. See agents work in real time.
+>
+> <img width="661" height="263" alt="Screenshot 2026-03-02 at 11 38 03 PM" src="https://github.com/user-attachments/assets/51036365-4b51-4568-bccd-db5e68665deb" />
+
 
 <p align="center">
   <img src="assets/stampede-agents.gif" alt="8 AI agents coding simultaneously in Terminal Stampede" width="1200" />
