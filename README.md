@@ -1,10 +1,6 @@
 # 🦬 Terminal Stampede
 
 <p align="center">
-  <img src="assets/demo-structure.png" alt="Terminal Stampede demo structure" width="700" />
-</p>
-
-<p align="center">
   <img src="assets/stampede-agents.gif" alt="8 AI agents coding simultaneously in Terminal Stampede" width="1200" />
 </p>
 
@@ -30,13 +26,6 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 📝 **[Read the full story →](BLOG.md)** *"What If You Could Run 8 AI Agents in One Terminal?"* — How Havoc Hackathon, Shadow Score, Dark Factory, and Agent X-Ray led to this experiment.
 
 ---
-
-> 🦬 **Try the demo — no setup required!**
-> ```bash
-> git clone https://github.com/DUBSOpenHub/terminal-stampede.git
-> cd terminal-stampede && ./install.sh
-> ```
-> Zero API calls. Just `tmux` and `bash`. See 8 agents work in real time.
 
 > ⚡ **Ready for the real thing?** Open a Copilot CLI session and type:
 > ```
