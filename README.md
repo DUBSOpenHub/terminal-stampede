@@ -1,8 +1,11 @@
 # 🦬 Terminal Stampede
 
-```
-stampede 8 agents on ~/my-project — add error handling, write tests, improve docs
-```
+> 🦬 **Try the demo — no setup required!**
+> ```bash
+> git clone https://github.com/DUBSOpenHub/terminal-stampede.git
+> cd terminal-stampede && ./install.sh
+> ```
+> Zero API calls. Just `tmux` and `bash`. See agents work in real time.
 
 <p align="center">
   <img src="assets/stampede-agents.gif" alt="8 AI agents coding simultaneously in Terminal Stampede" width="1200" />
