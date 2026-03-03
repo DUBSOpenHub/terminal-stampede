@@ -296,7 +296,7 @@ entry = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
          "reason": "queue_empty_drain_expired"}
 with open("LOGS_DIR/WORKER_ID.jsonl", "a") as f:
     f.write(json.dumps(entry) + "\n")
-print("Worker shutting down.")
+print("Agent shutting down.")
 '
 ```
 
