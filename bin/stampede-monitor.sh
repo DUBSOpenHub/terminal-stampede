@@ -167,23 +167,19 @@ except: pass
             fi
         done
         
-        # Build merge command and copy to clipboard
+        # Ask user if they want to merge right here
         REPO_PATH=$(python3 -c "import json; print(json.load(open('$BASE/state.json')).get('repo_path',''))" 2>/dev/null || echo "")
-        MERGE_CMD="stampede-merge.sh --run-id ${RUN_ID} --repo ${REPO_PATH}"
-        echo "$MERGE_CMD" | pbcopy 2>/dev/null || true
+        if [[ -n "$REPO_PATH" ]] && [[ -x "$HOME/bin/stampede-merge.sh" ]]; then
+            echo ""
+            printf "  ${G}🦬 Auto-merge + shadow score all branches?${R} ${TX}[Y/n]${R} "
+            read -t 60 -n 1 answer 2>/dev/null || answer="y"
+            echo ""
+            if [[ "$answer" != "n" ]] && [[ "$answer" != "N" ]]; then
+                echo ""
+                "$HOME/bin/stampede-merge.sh" --run-id "${RUN_ID}" --repo "${REPO_PATH}" 2>&1
+            fi
+        fi
         
-        CY="\033[38;5;51m"
-        echo ""
-        printf "  ${CY}╭──────────────────────────────────────────────────────╮${R}\n"
-        printf "  ${CY}│${R}                                                      ${CY}│${R}\n"
-        printf "  ${CY}│${R}  ${G}🦬${R} ${B}${TX}Merge command copied to clipboard!${R}                ${CY}│${R}\n"
-        printf "  ${CY}│${R}     ${TX}Open a regular terminal and paste (Cmd+V)${R}        ${CY}│${R}\n"
-        printf "  ${CY}│${R}                                                      ${CY}│${R}\n"
-        printf "  ${CY}│${R}     ${MT}→ Auto-merge all branches into one${R}               ${CY}│${R}\n"
-        printf "  ${CY}│${R}     ${MT}→ Shadow-score each agent's work${R}                 ${CY}│${R}\n"
-        printf "  ${CY}│${R}     ${MT}→ Update the model leaderboard${R}                   ${CY}│${R}\n"
-        printf "  ${CY}│${R}                                                      ${CY}│${R}\n"
-        printf "  ${CY}╰──────────────────────────────────────────────────────╯${R}\n"
         echo ""
         printf "  ${MT}Press any key to close. Auto-closes in 60s.${R}\n"
         
