@@ -110,7 +110,7 @@ A Terminal window opens. Eight panes tile across the screen. Gold ⚡ borders sh
 
 ## 📊 We Pointed It at Itself
 
-To test stampede, we pointed it at this repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the agent prompts, updating the changelog, and more. Nobody touched anything. They just ran.
+To test Terminal Stampede, we pointed it at this repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the agent prompts, updating the changelog, and more. Nobody touched anything. They just ran.
 
 | | Result |
 |---|---|
