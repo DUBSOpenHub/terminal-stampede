@@ -173,7 +173,14 @@ except: pass
         REPO_PATH=$(python3 -c "import json; print(json.load(open('$BASE/state.json')).get('repo_path',''))" 2>/dev/null || echo "")
         if [[ -n "$REPO_PATH" ]] && [[ -x "$HOME/bin/stampede-merge.sh" ]]; then
             echo ""
-            printf "  ${G}🦬 Auto-merge + shadow score all branches?${R} ${TX}[Y/n]${R} "
+            echo ""
+            printf "  ${B}${G}╭─────────────────────────────────────────────────╮${R}\n"
+            printf "  ${B}${G}│                                                 │${R}\n"
+            printf "  ${B}${G}│  🦬 Auto-merge + shadow score all branches?     │${R}\n"
+            printf "  ${B}${G}│                                                 │${R}\n"
+            printf "  ${B}${G}╰─────────────────────────────────────────────────╯${R}\n"
+            echo ""
+            printf "  ${B}${TX}  Press Y to merge, N to skip:${R} "
             read -t 60 -n 1 answer 2>/dev/null || answer="y"
             echo ""
             if [[ "$answer" != "n" ]] && [[ "$answer" != "N" ]]; then
