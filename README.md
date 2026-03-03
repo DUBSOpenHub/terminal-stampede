@@ -27,40 +27,6 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 ---
 
-> ⚡ **Ready for the real thing?** Open a Copilot CLI session and type:
-> ```
-> stampede 8 agents on ~/my-project
-> ```
-
----
-
-## 💡 The Problem
-
-You're a developer. Monday morning. Your codebase needs error handling added to 4 modules, test coverage expanded, docs updated, and the CLI cleaned up. That's 8 tasks.
-
-Today, you work through them one at a time. Ask Copilot for the first task. Wait. Ask for the second. Wait. Context-switch. Lose momentum. Some tasks take a minute, some take ten, but you're stuck in a queue of your own making.
-
-Terminal Stampede runs them all at once. One command, eight panes, eight agents working in parallel on their own git branches. Instead of feeding tasks one by one, you define the batch and let them run. Your development time scales with the longest single task, not the sum of all of them.
-
-| | Sequential | Parallel (Stampede) |
-|---|---|---|
-| Workflow | One task at a time | All tasks at once |
-| Context windows | 200K tokens (shared) | 1.6M tokens (8 × 200K) |
-| Git branches | 1 (sequential) | 8 (parallel, isolated) |
-| Your involvement | Babysit each task | Start it and walk away |
-
----
-
-## 🤔 What Is This?
-
-Every multi-agent framework out there (LangGraph, CrewAI, AutoGen) runs agents as function calls inside one process. They share one brain. When Agent A is thinking, Agent B waits.
-
-Terminal Stampede does something different. Each agent is a fully independent [Copilot CLI](https://docs.github.com/copilot/concepts/agents/about-copilot-cli) session running in its own tmux pane with its own 200K token context. It can read code, edit files, run tests, see failures, and fix them. No other agent is competing for its attention.
-
-The "message queue" is just files on disk. The "orchestrator" is just a Copilot skill. The "agent runtime" is just your terminal. Point it at any repo.
-
----
-
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -127,6 +93,35 @@ stampede.sh --run-id $RUN_ID --count 8 --repo ~/my-project --model claude-haiku-
 ```
 
 A Terminal window opens. Eight panes tile across the screen. Gold ⚡ borders show the model and task for each agent. A monitor pane tracks progress in real time. You watch them work.
+
+---
+
+## 💡 The Problem
+
+You're a developer. Monday morning. Your codebase needs error handling added to 4 modules, test coverage expanded, docs updated, and the CLI cleaned up. That's 8 tasks.
+
+Today, you work through them one at a time. Ask Copilot for the first task. Wait. Ask for the second. Wait. Context-switch. Lose momentum. Some tasks take a minute, some take ten, but you're stuck in a queue of your own making.
+
+Terminal Stampede runs them all at once. One command, eight panes, eight agents working in parallel on their own git branches. Instead of feeding tasks one by one, you define the batch and let them run. Your development time scales with the longest single task, not the sum of all of them.
+
+| | Sequential | Parallel (Stampede) |
+|---|---|---|
+| Workflow | One task at a time | All tasks at once |
+| Context windows | 200K tokens (shared) | 1.6M tokens (8 × 200K) |
+| Git branches | 1 (sequential) | 8 (parallel, isolated) |
+| Your involvement | Babysit each task | Start it and walk away |
+
+---
+
+## 🤔 What Is This?
+
+Every multi-agent framework out there (LangGraph, CrewAI, AutoGen) runs agents as function calls inside one process. They share one brain. When Agent A is thinking, Agent B waits.
+
+Terminal Stampede does something different. Each agent is a fully independent [Copilot CLI](https://docs.github.com/copilot/concepts/agents/about-copilot-cli) session running in its own tmux pane with its own 200K token context. It can read code, edit files, run tests, see failures, and fix them. No other agent is competing for its attention.
+
+The "message queue" is just files on disk. The "orchestrator" is just a Copilot skill. The "agent runtime" is just your terminal. Point it at any repo.
+
+---
 
 ---
 
