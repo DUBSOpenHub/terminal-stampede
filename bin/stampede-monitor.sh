@@ -177,6 +177,11 @@ except: pass
             if [[ "$answer" != "n" ]] && [[ "$answer" != "N" ]]; then
                 echo ""
                 "$HOME/bin/stampede-merge.sh" --run-id "${RUN_ID}" --repo "${REPO_PATH}" 2>&1
+            else
+                echo ""
+                printf "  ${MT}To merge later:${R}\n"
+                printf "  ${TX}stampede-merge.sh --run-id ${RUN_ID} --repo ${REPO_PATH}${R}\n"
+                printf "  ${MT}Branches are waiting on the repo — nothing was lost.${R}\n"
             fi
         fi
         
