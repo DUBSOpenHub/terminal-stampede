@@ -10,6 +10,7 @@
 - 🖥️ **tmux as execution surface**
 - 📂 **Filesystem as atomic message bus**
 - 👀 **Human-in-the-loop observability**
+- 🎯 **[Shadow scoring](https://github.com/DUBSOpenHub/shadow-score-spec)** — quality defined before agents run, measured silently after
 
 ---
 
