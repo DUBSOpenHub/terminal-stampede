@@ -35,8 +35,8 @@ The idea was simple:
 1. Write task descriptions as JSON files in a `queue/` folder
 2. Spin up N tmux panes, each running a CLI agent session with a worker agent
 3. Each worker grabs a task file by renaming it (atomic, race-safe)
-4. Worker does the actual work on its own git branch
-5. Worker drops a result file when done
+4. Agent does the actual work on its own git branch
+5. Agent drops a result file when done
 6. An orchestrator polls for results and synthesizes
 
 No server. No database. No framework. Just files and terminals.
