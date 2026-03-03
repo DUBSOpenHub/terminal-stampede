@@ -243,6 +243,12 @@ Scores are weighted — Completeness (30%) matters most, Conflict Friendliness (
 
 Scores persist across runs to `~/.copilot/stampede-model-stats.json`, building a leaderboard that shows which AI models consistently produce the best work over time.
 
+### Which AI model is actually best for your codebase?
+
+Every vendor publishes benchmarks. Every benchmark uses synthetic tests. None of them tell you which model writes the best code *on your repo, with your patterns, in your language*.
+
+The stampede leaderboard answers that question empirically. Every run shadow-scores each model's work. Scores accumulate across runs. Over time, you get a ranking built from real work on your real codebase — not from HumanEval, not from vendor marketing, not from someone else's synthetic tests. From your code, your tasks, your results.
+
 ---
 
 ## 🏇 Usage
