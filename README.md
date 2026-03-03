@@ -337,7 +337,7 @@ Options:
 
 ## 🦬 Origin
 
-Built during a [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon), where 8 AI models competed to design this framework across 2 elimination rounds with sealed judging. The winning architecture was synthesized from Claude Opus 4.6 (Fast) and GPT-5.3-Codex, then battle-tested with live stampedes on real codebases.
+Built during a [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon), where AI models competed to design this framework across elimination rounds with sealed judging. The winning architecture was synthesized from Claude Opus 4.6 (Fast) and GPT-5.3-Codex, then battle-tested with live stampedes on real codebases.
 
 **Read the full story:** [I Split One Terminal Into 20 AI Brains. Here's What Happened. →](BLOG.md)
 
