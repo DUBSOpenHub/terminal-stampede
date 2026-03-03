@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell syntax check
+        run: |
+          for f in bin/*.sh install.sh; do
+            echo "Checking $f..."
+            bash -n "$f"
+          done
+
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: bin
+          additional_files: install.sh
+
+      - name: YAML frontmatter check
+        run: |
+          for f in skills/SKILL.md agents/*.md; do
+            head -1 "$f" | grep -q '^---' || { echo "❌ $f missing frontmatter"; exit 1; }
+            echo "✅ $f"
+          done
+
+      - name: Install smoke test
+        run: |
+          # Verify install.sh runs without errors (skip demo launch)
+          sed 's/exec.*stampede-demo/echo "Demo skipped in CI"/' install.sh > /tmp/install-ci.sh
+          chmod +x /tmp/install-ci.sh
+          bash /tmp/install-ci.sh
+
+      - name: stampede.sh --help
+        run: |
+          chmod +x bin/stampede.sh
+          bin/stampede.sh --help
+
+      - name: Changelog version order
+        run: |
+          versions=$(grep '^## ' CHANGELOG.md | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          echo "$versions"
+          # Verify descending order
+          echo "$versions" | sort -rV | diff - <(echo "$versions") || { echo "❌ Changelog not in descending order"; exit 1; }
+          echo "✅ Changelog order correct"
