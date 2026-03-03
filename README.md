@@ -1,5 +1,9 @@
 # 🦬 Terminal Stampede
 
+```
+stampede 8 agents on ~/my-project — add error handling, write tests, improve docs
+```
+
 <p align="center">
   <img src="assets/stampede-agents.gif" alt="8 AI agents coding simultaneously in Terminal Stampede" width="1200" />
 </p>
