@@ -1,5 +1,7 @@
 # 🦬 Terminal Stampede
 
+[![Latest Release](https://img.shields.io/github/v/release/DUBSOpenHub/terminal-stampede?label=latest&color=gold)](https://github.com/DUBSOpenHub/terminal-stampede/releases/latest)
+
 > 🦬 **Try the demo — no setup required!**
 > ```bash
 > git clone https://github.com/DUBSOpenHub/terminal-stampede.git
