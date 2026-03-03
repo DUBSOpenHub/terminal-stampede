@@ -1,6 +1,6 @@
 # 🦬 Terminal Stampede
 
-🦬 A parallel agent runtime for your terminal. Up to 20 AI agents. Zero infrastructure. Built-in quality scoring. Works with any CLI coding agent.
+A parallel agent runtime for your terminal. Up to 20 AI agents. Zero infrastructure. Built-in quality scoring. Works with any CLI coding agent.
 
 [![Latest Release](https://img.shields.io/github/v/release/DUBSOpenHub/terminal-stampede?label=latest&color=gold)](https://github.com/DUBSOpenHub/terminal-stampede/releases/latest)
 
