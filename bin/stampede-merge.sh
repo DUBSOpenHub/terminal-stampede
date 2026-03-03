@@ -224,15 +224,35 @@ SEALED_FAILED=0
 if [[ -d "$SEALED_DIR" ]] && ls "$SEALED_DIR"/*.sh &>/dev/null 2>&1; then
     echo "🔒 Running sealed-envelope tests (Shadow Score)..."
     
-    # Verify tamper evidence — actually check the hash, not just its existence
-    if [[ -f "$SEALED_DIR/.seal-hash" ]]; then
-        expected_hash=$(cat "$SEALED_DIR/.seal-hash" | awk '{print $1}')
-        actual_hash=$(find "$SEALED_DIR" -name "*.sh" -print0 | sort -z | while IFS= read -r -d '' f; do shasum -a 256 < "$f"; done | shasum -a 256 | awk '{print $1}')
-        if [[ "$expected_hash" == "$actual_hash" ]]; then
-            echo "  🔐 Seal verified — tests unmodified since generation"
+    # Verify tamper evidence using canonical seal helper
+    # Check state.json first (spec §4.5), fall back to .seal-hash file
+    SEAL_HASH_SOURCE=""
+    if python3 -c "import json; h=json.load(open('$BASE_DIR/state.json')).get('sealed_hash',''); exit(0 if h else 1)" 2>/dev/null; then
+        SEAL_HASH_SOURCE="state.json"
+    fi
+    if [[ -n "$SEAL_HASH_SOURCE" ]] || [[ -f "$SEALED_DIR/.seal-hash" ]]; then
+        SEAL_SCRIPT="$(dirname "$0")/stampede-seal.sh"
+        if [[ -x "$SEAL_SCRIPT" ]]; then
+            if "$SEAL_SCRIPT" verify "$SEALED_DIR" &>/dev/null; then
+                echo "  🔐 Seal verified — tests unmodified since generation"
+            else
+                echo "  🚨 SEAL BROKEN — tests modified after generation (score invalid)"
+                SEAL_BROKEN=true
+            fi
         else
-            echo "  🚨 SEAL BROKEN — tests modified after generation (score invalid)"
-            SEAL_BROKEN=true
+            # Fallback: inline verification
+            if [[ "$SEAL_HASH_SOURCE" == "state.json" ]]; then
+                expected_hash=$(python3 -c "import json; print(json.load(open('$BASE_DIR/state.json'))['sealed_hash'])")
+            else
+                expected_hash=$(awk '{print $1}' < "$SEALED_DIR/.seal-hash")
+            fi
+            actual_hash=$(find "$SEALED_DIR" -name "*.sh" -print0 | sort -z | while IFS= read -r -d '' f; do shasum -a 256 < "$f"; done | shasum -a 256 | awk '{print $1}')
+            if [[ "$expected_hash" == "$actual_hash" ]]; then
+                echo "  🔐 Seal verified — tests unmodified since generation"
+            else
+                echo "  🚨 SEAL BROKEN — tests modified after generation (score invalid)"
+                SEAL_BROKEN=true
+            fi
         fi
     else
         echo "  ⚠️  No seal hash — tamper evidence unavailable"
@@ -314,7 +334,10 @@ from collections import defaultdict
 shadow_score = $( [[ -n "$SHADOW_SCORE" ]] && echo "$SHADOW_SCORE" || echo "-1" )
 sealed_total = $SEALED_TOTAL
 sealed_failed = $SEALED_FAILED
+sealed_passed = sealed_total - sealed_failed
+seal_broken = $( [[ "${SEAL_BROKEN:-false}" == "true" ]] && echo "True" || echo "False" )
 sealed_results_raw = "${SEALED_RESULTS:-}"
+sealed_fail_list_raw = "${SEALED_FAIL_LIST:-}"
 
 # Parse per-task sealed results: {task_id: "pass"|"fail"}
 sealed_per_task = {}
@@ -549,9 +572,25 @@ report = {
         "worst_agent": {"model": worst[1]["model"], "task_id": worst[1]["task_id"],
                         "score": worst[1]["scores"]["adjusted_total"]},
         "shadow_score": {
+            "shadow_score_spec_version": "1.0.0",
             "score_pct": shadow_score if shadow_score >= 0 else None,
-            "sealed_total": sealed_total,
-            "sealed_failed": sealed_failed,
+            "level": (
+                "perfect" if shadow_score == 0 else
+                "minor" if shadow_score <= 15 else
+                "moderate" if shadow_score <= 30 else
+                "significant" if shadow_score <= 50 else
+                "critical"
+            ) if shadow_score >= 0 else None,
+            "sealed_tests": {
+                "total": sealed_total,
+                "passed": sealed_passed,
+                "failed": sealed_failed,
+            },
+            "failures": [
+                {"test_name": t, "message": f"Sealed test {t} failed"}
+                for t in sealed_fail_list_raw.rstrip(",").split(",") if t
+            ] if sealed_failed > 0 else [],
+            "seal_verified": not seal_broken if shadow_score >= 0 else None,
             "enabled": shadow_score >= 0
         }
     },
