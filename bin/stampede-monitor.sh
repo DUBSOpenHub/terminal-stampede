@@ -160,8 +160,10 @@ except: pass
             status=$(python3 -c "import json; print(json.load(open('$rf')).get('status','?'))" 2>/dev/null || echo "?")
             title=$(python3 -c "import json; r=json.load(open('$rf')); print(r.get('title', r.get('summary','')[:60]))" 2>/dev/null || echo "")
             branch=$(python3 -c "import json; print(json.load(open('$rf')).get('branch',''))" 2>/dev/null || echo "")
+            files=$(python3 -c "import json; r=json.load(open('$rf')); print(', '.join(r.get('files_changed',[])))" 2>/dev/null || echo "")
             if [[ "$status" == "done" ]]; then
                 printf "    ${GN}✅${R} ${TX}${tid}: ${title}${R}  ${MT}→ ${branch}${R}\n"
+                [[ -n "$files" ]] && printf "       ${MT}${files}${R}\n"
             else
                 printf "    ${RD}❌${R} ${TX}${tid}: ${title} — ${status}${R}\n"
             fi
