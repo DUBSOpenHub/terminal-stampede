@@ -7,6 +7,7 @@
 **A parallel agent runtime for your terminal.** Run up to 20 AI coding agents simultaneously, each in its own tmux pane with its own context window and git branch. Works with any CLI agent that can take a prompt and write code.
 
 - 🏠 **Zero-infrastructure local swarm**
+- 🧱 **Simplicity over complexity** — no frameworks, no servers, no message brokers. The simpler the system, the more reliable the output.
 - 🖥️ **tmux as execution surface**
 - 📂 **Filesystem as atomic message bus**
 - 👀 **Human-in-the-loop observability**
