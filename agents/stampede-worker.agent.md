@@ -204,8 +204,15 @@ worker_id = "WORKER_ID"
 repo = "REPO_PATH"
 
 try:
+    branch = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        cwd=repo, stderr=subprocess.DEVNULL).decode().strip()
+except subprocess.CalledProcessError:
+    branch = f"stampede/{task_id}"
+
+try:
     diff = subprocess.check_output(
-        ["git", "diff", "--name-only", "HEAD~1", "HEAD"],
+        ["git", "diff", "--name-only", "main...HEAD"],
         cwd=repo, stderr=subprocess.DEVNULL).decode().strip()
     files_changed = diff.split("\n") if diff else []
 except subprocess.CalledProcessError:
@@ -222,7 +229,7 @@ result = {
     "worker_id": worker_id,
     "status": "done",
     "generation": GENERATION,
-    "branch": f"stampede/{task_id}",
+    "branch": branch,
     "files_changed": files_changed,
     "summary": summary,
     "word_count": min(len(words), 500),
