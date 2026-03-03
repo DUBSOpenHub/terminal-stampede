@@ -1,10 +1,10 @@
 # What If You Could Run 20 AI Agents in One Terminal?
 
-I didn't plan to build this. I was exploring what the Copilot CLI could do, and one experiment kept leading to the next.
+I didn't plan to build a parallel agent runtime. I was exploring what CLI coding agents could do, and one experiment kept leading to the next.
 
 ## It started with the arena
 
-Working in the Copilot CLI, I kept wondering: when you ask two AI models to do the same task, how do you actually know which one did a better job? Not vibes. Not "this one feels smarter." Something measurable.
+Working in the terminal with AI coding agents, I kept wondering: when you ask two AI models to do the same task, how do you actually know which one did a better job? Not vibes. Not "this one feels smarter." Something measurable.
 
 That became [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon) — a skill that pits up to 14 AI models against each other in tournament elimination. Sealed judges, ELO ratings, evolution between rounds.
 
@@ -47,9 +47,9 @@ I had a hackathon's contestants build it. Eight models, three files each, two el
 
 The first few launches were rough. Workers would start but not claim tasks. The autopilot flag only works in prompt mode (`-p`), not interactive mode (`-i`) — a subtle CLI distinction that cost me three debug cycles. Workers would sometimes finish but not write a result because they hit the autopilot continuation cap. The orchestrator couldn't tell if a worker was thinking or dead.
 
-Each failure mode had the same fix: keep it simple. PID checks instead of heartbeats. Generation counters instead of dedup logic. Atomic file renames instead of lock files. Every time I reached for complexity, the filesystem already had the answer.
+Each failure mode had the same fix: keep it simple. PID checks instead of heartbeats. Generation counters instead of dedup logic. Atomic file renames instead of lock files. Every time I reached for complexity, the filesystem already had the answer. The simpler the system, the more reliable the output.
 
-The moment it clicked: I launched 8 agents on [ghost-ops](https://github.com/DUBSOpenHub/ghost-ops), my autonomous daemon project. Eight panes lit up, each with a gold ⚡ border showing the model and task. One agent was adding error handling to the watchdog module. Another was writing integration tests. Another was improving the ELO router. All simultaneously. All on their own git branches. All finishing while I watched.
+The moment it clicked: I launched 8 agents on [ghost-ops](https://github.com/DUBSOpenHub/ghost-ops), my autonomous daemon project. Panes lit up, each with a gold ⚡ border showing the model and task. One agent was adding error handling to the watchdog module. Another was writing integration tests. Another was improving the ELO router. All simultaneously. All on their own git branches. All finishing while I watched.
 
 Doing those same tasks one at a time would have meant sitting through each one sequentially, context-switching between them, losing momentum. Instead, every task ran in parallel and my wait time was just the longest single task, not the sum of all of them.
 
@@ -57,13 +57,13 @@ Doing those same tasks one at a time would have meant sitting through each one s
 
 Each tool I'd built before turned out to solve a piece of the same problem:
 
-- **[Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon)** maintains an ELO leaderboard across 15 models. Stampede could use that data to route tasks to the right model.
-- **[Shadow Score](https://github.com/DUBSOpenHub/shadow-score-spec)** measures output quality. Stampede could shadow-score results before accepting them.
+- **[Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon)** maintains an ELO leaderboard across 15 models. Stampede uses that same idea — shadow-scoring every model's work across runs to build an empirical leaderboard for *your* codebase.
+- **[Shadow Score](https://github.com/DUBSOpenHub/shadow-score-spec)** measures output quality. Stampede bakes it into the runtime — quality criteria are defined before agents run, measured silently after. The agents never know they're being scored.
 - **[Dark Factory](https://github.com/DUBSOpenHub/dark-factory)** builds production code through a checkpoint pipeline. Stampede could parallelize the build phases.
 - **[Agent X-Ray](https://github.com/DUBSOpenHub/agent-xray)** scans agents and scores their quality. Stampede could use those scores to decide which agents to deploy.
-- **[Ghost Ops](https://github.com/DUBSOpenHub/ghost-ops)** runs autonomous missions on a schedule. Stampede could be a mission type — "every morning at 6am, dispatch 8 agents to sweep the codebase."
+- **[Ghost Ops](https://github.com/DUBSOpenHub/ghost-ops)** runs autonomous missions on a schedule. Stampede could be a mission type — "every morning at 6am, dispatch 20 agents to sweep the codebase."
 
-These aren't integrated yet — they're just experiments that turned out to be adjacent.
+These aren't integrated yet — they're just experiments that turned out to be adjacent. But the shadow scoring and model leaderboard are already built into Stampede. Every run answers the question: which AI model is actually best for your codebase? Not from vendor benchmarks. Not from synthetic tests. From real work on your real repo.
 
 ## What I'm still figuring out
 
@@ -85,13 +85,15 @@ The distinction matters because the agent doesn't just think — it does. It rea
 
 And because every agent runs in a visible pane, you're not handing off control. You can watch them work, zoom into any pane, type into it, or just walk away. Most multi-agent systems give you logs when it's over. This one puts you in the room while it's happening.
 
+The architecture is tool-agnostic. It was built with GitHub Copilot CLI, but the pattern works with any CLI agent that can take a prompt and write code — Aider, Claude Code, or whatever comes next. The runtime is tmux and the filesystem. Everything else is swappable.
+
 ## We pointed it at itself
 
 To test it, we pointed stampede at its own repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the worker agent, updating the changelog. Nobody touched anything. They just ran.
 
-8/8 success. ~6 minutes. Zero coordination failures. ~800 lines of real changes across 8 branches. The simplest possible architecture was also the most reliable.
+8/8 success. ~6 minutes. Zero coordination failures. ~800 lines of real changes across 8 branches. The simplest possible architecture was also the most reliable. No frameworks, no servers, no message brokers. Just files on disk and terminals.
 
-The CLI was already the agent runtime. I just needed more of them.
+The terminal was already the agent runtime. I just needed 20 of them.
 
 ---
 
