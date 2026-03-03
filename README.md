@@ -21,17 +21,14 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 ---
 
-
 <img width="691" height="272" alt="Screenshot 2026-03-02 at 3 39 22 PM" src="https://github.com/user-attachments/assets/94fb8aeb-f359-4f74-99b3-3ea2a77c48fe" />
+
 > 🦬 **Try the demo — no setup required!**
 > ```bash
 > git clone https://github.com/DUBSOpenHub/terminal-stampede.git
 > cd terminal-stampede && ./install.sh
 > ```
-
 > Zero API calls. Just `tmux` and `bash`. See 8 agents work in real time.
-
-
 
 *8 agents working in parallel — command center tracking progress in real time*
 
