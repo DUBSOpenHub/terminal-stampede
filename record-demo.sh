@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Record the stampede demo as an asciinema cast, then convert to GIF
+# record-demo.sh
+# Records Terminal Stampede demo as an asciinema cast and converts to GIF.
+# Shows multi-agent orchestration with visual boot sequence and runtime capture.
 # Usage: ./record-demo.sh
+# Requirements: asciinema, tmux, (optional) agg for GIF conversion
+# Output: assets/demo.cast (and assets/demo.gif if agg is installed)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CAST_FILE="$SCRIPT_DIR/assets/demo.cast"
