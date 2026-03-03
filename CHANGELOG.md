@@ -52,7 +52,7 @@ Initial release. Built during a Havoc Hackathon.
 - Support for 1-20 parallel agents (sweet spot: 6-8)
 
 ### Architecture
-- Zero infrastructure: tmux + Copilot CLI + filesystem
+- Zero infrastructure: tmux + CLI agents + filesystem
 - Agent for workers (per-session isolation), skill for orchestrator (always available)
 - Branch per task prevents git conflicts
 - 500-word result cap prevents context explosion

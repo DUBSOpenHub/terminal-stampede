@@ -1,4 +1,4 @@
-# What If You Could Run 8 AI Agents in One Terminal?
+# What If You Could Run 20 AI Agents in One Terminal?
 
 I didn't plan to build this. I was exploring what the Copilot CLI could do, and one experiment kept leading to the next.
 
@@ -24,16 +24,16 @@ Dark Factory builds things, but how do you know the agents themselves are well-c
 
 But Havoc Hackathon has a constraint: every contestant runs as a sub-agent inside the same session. The orchestrator dispatches them, collects results, and scores them. They each get their own context, but they're managed processes — the orchestrator is the bottleneck, and contestants can't interact with the repo the way a real developer would (reading files, editing code, running tests, iterating on failures).
 
-I was watching a hackathon run — 8 models competing to build a multi-agent framework (meta, I know) — and I thought: what if each contestant had its own terminal? Not a managed sub-agent, but a completely independent Copilot session with its own 200K tokens of working memory, its own tool access, its own ability to read files, edit code, and run tests.
+I was watching a hackathon run — 8 models competing to build a multi-agent framework (meta, I know) — and I thought: what if each contestant had its own terminal? Not a managed sub-agent, but a completely independent CLI session with its own working memory, its own tool access, its own ability to read files, edit code, and run tests.
 
-I already had the pieces. Copilot CLI supports custom agents (`--agent`). tmux can split a terminal into arbitrary panes. Filesystems are already message queues if you squint.
+I already had the pieces. Copilot CLI supports custom agents (`--agent`). tmux can split a terminal into arbitrary panes. Filesystems are already message queues if you squint. And the same architecture would work with any CLI coding agent.
 
 ## The prototype
 
 The idea was simple:
 
 1. Write task descriptions as JSON files in a `queue/` folder
-2. Spin up N tmux panes, each running a Copilot session with a worker agent
+2. Spin up N tmux panes, each running a CLI agent session with a worker agent
 3. Each worker grabs a task file by renaming it (atomic, race-safe)
 4. Worker does the actual work on its own git branch
 5. Worker drops a result file when done
@@ -69,7 +69,7 @@ These aren't integrated yet — they're just experiments that turned out to be a
 
 This is an experiment, not a product. Things I don't know yet:
 
-**Does the quality hold up?** Eight fast agents might produce eight mediocre results. I haven't done rigorous quality comparison between "one powerful session doing 8 tasks carefully" versus "eight lightweight sessions doing 1 task each quickly." That's a Shadow Score experiment waiting to happen.
+**Does the quality hold up?** Twenty fast agents might produce twenty mediocre results. I haven't done rigorous quality comparison between "one powerful session doing all tasks carefully" versus "many lightweight sessions doing 1 task each quickly." That's a Shadow Score experiment waiting to happen.
 
 **How far does the filesystem queue scale?** For 8-20 workers it's fine. For 100? Probably not. But 100 parallel AI agents on one repo is a problem I'm happy to have later.
 
@@ -79,7 +79,7 @@ This is an experiment, not a product. Things I don't know yet:
 
 Every multi-agent framework I've seen treats agents as function calls. They're threads in a process, sharing memory, sharing an API connection, taking turns. That's concurrency.
 
-Terminal Stampede treats agents as developers. Each one gets a desk (tmux pane), a full copy of the project (200K context), their own tools (bash, grep, edit), and a task written on a sticky note (JSON manifest). They work independently and drop their results in a shared folder when done. That's parallelism.
+Terminal Stampede treats agents as developers. Each one gets a desk (tmux pane), a full copy of the project (their own context window), their own tools (bash, grep, edit), and a task written on a sticky note (JSON manifest). They work independently and drop their results in a shared folder when done. That's parallelism.
 
 The distinction matters because the agent doesn't just think — it does. It reads code, edits files, runs tests, sees failures, and iterates. You can't do that well in a shared context. You need your own workspace.
 
@@ -91,7 +91,7 @@ To test it, we pointed stampede at its own repo. 8 agents ran simultaneously on 
 
 8/8 success. ~6 minutes. Zero coordination failures. ~800 lines of real changes across 8 branches. The simplest possible architecture was also the most reliable.
 
-The CLI was already the agent runtime. I just needed 8 of them.
+The CLI was already the agent runtime. I just needed more of them.
 
 ---
 

@@ -14,17 +14,17 @@
 
 ---
 
-You've been doing AI coding one task at a time. Ask, wait, ask again, wait again. Terminal Stampede splits your terminal into 8 panes, drops an AI agent into each one, and lets them all charge through your codebase simultaneously. Each agent gets its own brain, its own branch, its own mission. You watch them work in real time through the gold ⚡ borders. Minutes later, everything's done.
+You've been doing AI coding one task at a time. Ask, wait, ask again, wait again. Terminal Stampede splits your terminal into multiple panes, drops an AI agent into each one, and lets them all charge through your codebase simultaneously. Each agent gets its own brain, its own branch, its own mission. You watch them work in real time through the gold ⚡ borders. Minutes later, everything's done.
 
 **Zero infrastructure.** No Redis, no HTTP, no Docker, no cloud. Just files on disk and tmux.
 
 **Human in the loop, not after the fact.** Every agent runs in a visible pane. Zoom in on any one, type into it, kill it, or just watch. Most multi-agent systems give you logs when it's over. This one puts you in the room while it's happening.
 
-**tmux is the runtime.** Each pane is a full Copilot CLI session with its own 200K context window. The filesystem is the message bus — task claiming is an atomic file rename, no locks, no coordination server. Point it at any repo.
+**tmux is the runtime.** Each pane is a full CLI agent session with its own context window. The filesystem is the message bus — task claiming is an atomic file rename, no locks, no coordination server. Point it at any repo.
 
-**Built for GitHub Copilot CLI.** The pattern works anywhere — swap the agent command for any CLI tool that can read a task and write a result.
+**Works with any CLI agent.** Built with GitHub Copilot CLI, but the pattern is tool-agnostic — swap the agent command for Aider, Claude Code, or any CLI tool that can read a task and write code.
 
-📝 **[Read the full story →](BLOG.md)** *"What If You Could Run 8 AI Agents in One Terminal?"* — How Havoc Hackathon, Shadow Score, Dark Factory, and Agent X-Ray led to this experiment.
+📝 **[Read the full story →](BLOG.md)** *"What If You Could Run 20 AI Agents in One Terminal?"* — How Havoc Hackathon, Shadow Score, Dark Factory, and Agent X-Ray led to this experiment.
 
 ---
 
@@ -34,7 +34,7 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 - macOS or Linux
 - `tmux` (`brew install tmux`)
-- `gh copilot` (GitHub Copilot CLI extension)
+- A CLI coding agent (e.g., [GitHub Copilot CLI](https://docs.github.com/copilot/concepts/agents/about-copilot-cli), Aider, Claude Code)
 - `python3`, `jq`, `openssl`, `git`
 
 ### Install
@@ -58,7 +58,7 @@ Three files land in their working locations:
 
 ### Run
 
-**Option A: From a Copilot CLI session** (easiest)
+**Option A: From a Copilot CLI session** (if using GitHub Copilot)
 
 Open a Copilot CLI session and tell the stampede skill what to do:
 
@@ -101,15 +101,15 @@ A Terminal window opens. Eight panes tile across the screen. Gold ⚡ borders sh
 
 You're a developer. Monday morning. Your codebase needs error handling added to 4 modules, test coverage expanded, docs updated, and the CLI cleaned up. That's 8 tasks.
 
-Today, you work through them one at a time. Ask Copilot for the first task. Wait. Ask for the second. Wait. Context-switch. Lose momentum. Some tasks take a minute, some take ten, but you're stuck in a queue of your own making.
+Today, you work through them one at a time. Ask your AI agent for the first task. Wait. Ask for the second. Wait. Context-switch. Lose momentum. Some tasks take a minute, some take ten, but you're stuck in a queue of your own making.
 
-Terminal Stampede runs them all at once. One command, eight panes, eight agents working in parallel on their own git branches. Instead of feeding tasks one by one, you define the batch and let them run. Your development time scales with the longest single task, not the sum of all of them.
+Terminal Stampede runs them all at once. One command, up to 20 panes, each agent working in parallel on its own git branch. Instead of feeding tasks one by one, you define the batch and let them run. Your development time scales with the longest single task, not the sum of all of them.
 
 | | Sequential | Parallel (Stampede) |
 |---|---|---|
 | Workflow | One task at a time | All tasks at once |
-| Context windows | 200K tokens (shared) | 1.6M tokens (8 × 200K) |
-| Git branches | 1 (sequential) | 8 (parallel, isolated) |
+| Context windows | One shared session | Up to 20 independent sessions |
+| Git branches | 1 (sequential) | Up to 20 (parallel, isolated) |
 | Your involvement | Babysit each task | Start it and walk away |
 
 ---
@@ -118,9 +118,9 @@ Terminal Stampede runs them all at once. One command, eight panes, eight agents 
 
 Every multi-agent framework out there (LangGraph, CrewAI, AutoGen) runs agents as function calls inside one process. They share one brain. When Agent A is thinking, Agent B waits.
 
-Terminal Stampede does something different. Each agent is a fully independent [Copilot CLI](https://docs.github.com/copilot/concepts/agents/about-copilot-cli) session running in its own tmux pane with its own 200K token context. It can read code, edit files, run tests, see failures, and fix them. No other agent is competing for its attention.
+Terminal Stampede does something different. Each agent is a fully independent CLI session running in its own tmux pane with its own context window. It can read code, edit files, run tests, see failures, and fix them. No other agent is competing for its attention.
 
-The "message queue" is just files on disk. The "orchestrator" is just a Copilot skill. The "agent runtime" is just your terminal. Point it at any repo.
+The "message queue" is just files on disk. The "orchestrator" is just a script. The "agent runtime" is just your terminal. Point it at any repo.
 
 ---
 
@@ -241,7 +241,7 @@ Options:
         ▼       ▼       ▼       ▼
      ┌─────┐┌─────┐┌─────┐┌─────┐
      │  🦬  ││  🦬  ││  🦬  ││  🦬  │  Each agent: own terminal,
-     │     ││     ││     ││     │  own 200K context, own branch
+     │     ││     ││     ││     │  own context window, own branch
      └──┬──┘└──┬──┘└──┬──┘└──┬──┘
         │      │      │      │
         ▼      ▼      ▼      ▼
@@ -269,7 +269,7 @@ Options:
 | Auto-merger with AI conflict resolution | Reads both task descriptions to resolve conflicts semantically, not just syntactically |
 | Weighted shadow scoring | Completeness (30%) matters most; conflict friendliness (10%) is partly luck |
 | Cross-run model leaderboard | Shows which AI models consistently produce the best work over time |
-| 500-word result cap | 8 verbose summaries would blow the orchestrator's context |
+| 500-word result cap | Verbose summaries would blow the orchestrator's context |
 | `--max-autopilot-continues 30` | Prevents runaway agents from burning unlimited quota |
 | Lightweight models for grunt work | Save the powerful model for synthesis, use fast ones for parallel tasks |
 
@@ -306,7 +306,7 @@ To test stampede, we pointed it at this repo. 8 agents ran simultaneously on the
 
 Built during a [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon), where 8 AI models competed to design this framework across 2 elimination rounds with sealed judging. The winning architecture was synthesized from Claude Opus 4.6 (Fast) and GPT-5.3-Codex, then battle-tested with live stampedes on real codebases.
 
-**Read the full story:** [I Split One Terminal Into 8 AI Brains. Here's What Happened. →](BLOG.md)
+**Read the full story:** [I Split One Terminal Into 20 AI Brains. Here's What Happened. →](BLOG.md)
 
 ## 📄 License
 
@@ -316,6 +316,6 @@ Built during a [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon)
 
 ## 🐙 Built with Love
 
-Created with 💜 by [DUBSOpenHub](https://github.com/DUBSOpenHub) to help more people discover the joy of GitHub Copilot CLI.
+Created with 💜 by [DUBSOpenHub](https://github.com/DUBSOpenHub). Works with any CLI coding agent.
 
 **Let's build!** 🚀✨
