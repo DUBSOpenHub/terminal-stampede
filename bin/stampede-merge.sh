@@ -227,7 +227,7 @@ if [[ -d "$SEALED_DIR" ]] && ls "$SEALED_DIR"/*.sh &>/dev/null 2>&1; then
     # Verify tamper evidence — actually check the hash, not just its existence
     if [[ -f "$SEALED_DIR/.seal-hash" ]]; then
         expected_hash=$(cat "$SEALED_DIR/.seal-hash" | awk '{print $1}')
-        actual_hash=$(find "$SEALED_DIR" -name "*.sh" | sort | while read f; do shasum -a 256 < "$f"; done | shasum -a 256 | awk '{print $1}')
+        actual_hash=$(find "$SEALED_DIR" -name "*.sh" -print0 | sort -z | while IFS= read -r -d '' f; do shasum -a 256 < "$f"; done | shasum -a 256 | awk '{print $1}')
         if [[ "$expected_hash" == "$actual_hash" ]]; then
             echo "  🔐 Seal verified — tests unmodified since generation"
         else
