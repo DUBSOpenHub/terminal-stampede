@@ -10,7 +10,7 @@ That became [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon) �
 
 ## Then came the measuring stick
 
-Running hackathons surfaced a new problem: the judges needed a consistent way to evaluate quality, after I discovered that models were giving preference to their model families when judging. That led to me to create [Shadow Score](https://github.com/DUBSOpenHub/shadow-score-spec) — a sealed-envelope testing protocol. You give two models the same task, score them blind, and let the numbers talk. No peeking at who wrote what until after the verdict. Quality isn't subjective when you have a rubric.
+Running hackathons surfaced a new problem: the judges needed a consistent way to evaluate quality. This was after I discovered that models were giving preference to their model families when judging. This discovery led me to me to create [Shadow Score](https://github.com/DUBSOpenHub/shadow-score-spec) — a sealed-envelope testing protocol. You give two models the same task, score them blind, and let the numbers talk. No peeking at who wrote what until after the verdict. Quality isn't subjective when you have a rubric.
 
 ## Then the factory
 
