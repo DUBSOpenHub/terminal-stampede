@@ -141,7 +141,14 @@ show_banner() {
             if $is_done; then
                 ICON="\033[38;5;46m✓"; WC="\033[38;5;46m"; STATUS_WORD="done  "
             elif ! $is_alive && [[ -f "$pid_file" ]]; then
-                ICON="\033[38;5;203m✕"; WC="\033[38;5;203m"; STATUS_WORD="dead  "
+                # Check if this is a completed agent vs a crashed one
+                # If no tasks remain in queue/claimed, agent finished normally
+                local remaining_tasks=$(find "$BASE/queue" "$BASE/claimed" -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
+                if [[ "$remaining_tasks" -eq 0 ]]; then
+                    ICON="\033[38;5;46m✓"; WC="\033[38;5;46m"; STATUS_WORD="done  "
+                else
+                    ICON="\033[38;5;203m✕"; WC="\033[38;5;203m"; STATUS_WORD="dead  "
+                fi
             elif echo "$PANE_LAST" | grep -qi "error\|fail\|fatal" 2>/dev/null; then
                 ICON="\033[38;5;203m✕"; WC="\033[38;5;203m"; STATUS_WORD="ERROR "
             elif echo "$PANE_LAST" | grep -qi "test\|npm test\|pytest\|vitest" 2>/dev/null; then
@@ -209,18 +216,21 @@ show_completion() {
     # Agent stats
     echo ""
     echo "  ── Agents ──"
-    local alive=0 dead=0
+    local finished=0 dead=0
+    local remaining_tasks=$(find "$BASE/queue" "$BASE/claimed" -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
     for pf in "$PIDS_DIR"/worker-*.pid; do
         [ -f "$pf" ] || continue
         local wid=$(basename "$pf" .pid)
         local wpid=$(cat "$pf")
         if kill -0 "$wpid" 2>/dev/null; then
-            ((alive++))
+            ((finished++))
+        elif [[ "$remaining_tasks" -eq 0 ]]; then
+            ((finished++))
         else
             ((dead++))
         fi
     done
-    echo "    🟢 $alive finished  ·  🔴 $dead failed"
+    echo "    🟢 $finished finished  ·  🔴 $dead failed"
     
     echo ""
     printf "\033[1;36m"
