@@ -1,5 +1,15 @@
 # 🦬 Terminal Stampede
 
+<p align="center">
+  <img src="assets/demo-structure.png" alt="Terminal Stampede demo structure" width="700" />
+</p>
+
+<p align="center">
+  <img src="assets/stampede-agents.gif" alt="8 AI agents coding simultaneously in Terminal Stampede" width="1200" />
+</p>
+
+---
+
 **One terminal. Eight AI agents. All running at the same time.**
 
 You've been doing AI coding one task at a time. Ask, wait, ask again, wait again. Terminal Stampede splits your terminal into 8 panes, drops an AI agent into each one, and lets them all charge through your codebase simultaneously. Each agent gets its own brain, its own branch, its own mission. You watch them work in real time through the gold ⚡ borders. Minutes later, everything's done.
@@ -16,23 +26,12 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 
 ---
 
-
-<p align="center">
-  <img src="assets/stampede-agents.gif" alt="8 AI agents coding simultaneously in Terminal Stampede" width="1200" />
-</p>
-
----
-
-<img width="691" height="272" alt="Screenshot 2026-03-02 at 3 39 22 PM" src="https://github.com/user-attachments/assets/94fb8aeb-f359-4f74-99b3-3ea2a77c48fe" />
-
 > 🦬 **Try the demo — no setup required!**
 > ```bash
 > git clone https://github.com/DUBSOpenHub/terminal-stampede.git
 > cd terminal-stampede && ./install.sh
 > ```
 > Zero API calls. Just `tmux` and `bash`. See 8 agents work in real time.
-
-*8 agents working in parallel — command center tracking progress in real time*
 
 > ⚡ **Ready for the real thing?** Open a Copilot CLI session and type:
 > ```
