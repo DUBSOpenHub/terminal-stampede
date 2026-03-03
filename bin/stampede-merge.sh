@@ -91,9 +91,25 @@ for rf in "$RESULTS_DIR"/*.json; do
     status=$(python3 -c "import json; print(json.load(open('$rf')).get('status',''))" 2>/dev/null || echo "")
     if [[ -n "$branch" ]] && [[ "$status" == "done" ]]; then
         if cd "$REPO_PATH" && git rev-parse --verify "$branch" &>/dev/null; then
-            BRANCHES+=("$branch")
+            if git merge-base --is-ancestor "$branch" main 2>/dev/null; then
+                echo "  ⏩ $branch already in main (skipping)"
+            else
+                BRANCHES+=("$branch")
+            fi
         else
-            echo "  ⚠️  Branch $branch not found in repo (skipping)"
+            # Fuzzy match: find a branch starting with the expected name
+            task_id=$(python3 -c "import json; print(json.load(open('$rf')).get('task_id',''))" 2>/dev/null || echo "")
+            found=$(cd "$REPO_PATH" && git branch --list "stampede/${task_id}*" | head -1 | tr -d ' *')
+            if [[ -n "$found" ]]; then
+                if git merge-base --is-ancestor "$found" main 2>/dev/null; then
+                    echo "  ⏩ $found already in main (skipping)"
+                else
+                    echo "  🔄 Branch $branch not found, using $found"
+                    BRANCHES+=("$found")
+                fi
+            else
+                echo "  ⚠️  Branch $branch not found in repo (skipping)"
+            fi
         fi
     fi
 done
@@ -208,10 +224,23 @@ SEALED_FAILED=0
 if [[ -d "$SEALED_DIR" ]] && ls "$SEALED_DIR"/*.sh &>/dev/null 2>&1; then
     echo "🔒 Running sealed-envelope tests (Shadow Score)..."
     
-    # Verify tamper evidence
+    # Verify tamper evidence — actually check the hash, not just its existence
     if [[ -f "$SEALED_DIR/.seal-hash" ]]; then
-        echo "  🔐 Seal hash found — tests unmodified since generation"
+        expected_hash=$(cat "$SEALED_DIR/.seal-hash" | awk '{print $1}')
+        actual_hash=$(find "$SEALED_DIR" -name "*.sh" | sort | while read f; do shasum -a 256 < "$f"; done | shasum -a 256 | awk '{print $1}')
+        if [[ "$expected_hash" == "$actual_hash" ]]; then
+            echo "  🔐 Seal verified — tests unmodified since generation"
+        else
+            echo "  🚨 SEAL BROKEN — tests modified after generation (score invalid)"
+            SEAL_BROKEN=true
+        fi
+    else
+        echo "  ⚠️  No seal hash — tamper evidence unavailable"
     fi
+    
+    # Track per-task results for per-agent scoring (bash 3 compatible)
+    SEALED_PASS_LIST=""
+    SEALED_FAIL_LIST=""
     
     for test_script in "$SEALED_DIR"/*.sh; do
         [[ -f "$test_script" ]] || continue
@@ -219,18 +248,25 @@ if [[ -d "$SEALED_DIR" ]] && ls "$SEALED_DIR"/*.sh &>/dev/null 2>&1; then
         SEALED_TOTAL=$((SEALED_TOTAL + 1))
         
         chmod +x "$test_script"
-        if (cd "$REPO_PATH" && bash "$test_script") &>/dev/null 2>&1; then
+        # Capture failure output for gap report
+        test_output=""
+        if test_output=$(cd "$REPO_PATH" && bash "$test_script" 2>&1); then
             echo "  ✅ $test_name — passed"
+            SEALED_PASS_LIST+="$test_name,"
         else
             echo "  ❌ $test_name — FAILED"
+            if [[ -n "$test_output" ]]; then
+                echo "     └─ $(echo "$test_output" | tail -1)"
+            fi
             SEALED_FAILED=$((SEALED_FAILED + 1))
+            SEALED_FAIL_LIST+="$test_name,"
         fi
     done
     
     if [[ $SEALED_TOTAL -gt 0 ]]; then
         SHADOW_SCORE=$((SEALED_FAILED * 100 / SEALED_TOTAL))
         
-        # Interpret score per Shadow Score spec
+        # Interpret score per Shadow Score spec §3.4
         if [[ $SHADOW_SCORE -eq 0 ]]; then
             SHADOW_LEVEL="✅ Perfect"
         elif [[ $SHADOW_SCORE -le 15 ]]; then
@@ -246,7 +282,20 @@ if [[ -d "$SEALED_DIR" ]] && ls "$SEALED_DIR"/*.sh &>/dev/null 2>&1; then
         echo ""
         echo "  🔒 Shadow Score: ${SHADOW_SCORE}% ($SEALED_FAILED/$SEALED_TOTAL sealed tests failed)"
         echo "     $SHADOW_LEVEL"
+        if [[ "${SEAL_BROKEN:-false}" == "true" ]]; then
+            echo "     ⚠️  Score unreliable — seal was broken"
+        fi
     fi
+    
+    # Build per-task sealed results for Phase 2 scoring
+    SEALED_RESULTS=""
+    for t in $(echo "$SEALED_PASS_LIST" | tr ',' ' '); do
+        [[ -n "$t" ]] && SEALED_RESULTS+="$t:pass,"
+    done
+    for t in $(echo "$SEALED_FAIL_LIST" | tr ',' ' '); do
+        [[ -n "$t" ]] && SEALED_RESULTS+="$t:fail,"
+    done
+    
     echo ""
 else
     echo "  (No sealed tests found — skipping Shadow Score)"
@@ -265,6 +314,15 @@ from collections import defaultdict
 shadow_score = $( [[ -n "$SHADOW_SCORE" ]] && echo "$SHADOW_SCORE" || echo "-1" )
 sealed_total = $SEALED_TOTAL
 sealed_failed = $SEALED_FAILED
+sealed_results_raw = "${SEALED_RESULTS:-}"
+
+# Parse per-task sealed results: {task_id: "pass"|"fail"}
+sealed_per_task = {}
+if sealed_results_raw:
+    for pair in sealed_results_raw.rstrip(",").split(","):
+        if ":" in pair:
+            tid, result = pair.split(":", 1)
+            sealed_per_task[tid] = result
 
 repo = "$REPO_PATH"
 base = "$BASE_DIR"
@@ -312,11 +370,13 @@ if os.path.exists(rt_path):
 
 # Load result JSONs for task context + worker mapping
 results_map = {}
+results_by_task = {}
 for rf in sorted(os.listdir(results_dir)):
     if not rf.endswith('.json') or rf.startswith('.tmp-'): continue
     with open(os.path.join(results_dir, rf)) as f:
         r = json.load(f)
     results_map[r.get("branch", "")] = r
+    results_by_task[r.get("task_id", "")] = r
 
 # Weights
 W = {"completeness": 0.30, "scope_adherence": 0.25, "code_quality": 0.20,
@@ -339,6 +399,13 @@ for i, branch in enumerate(sorted_branches):
     status = merge_statuses[i] if i < len(merge_statuses) else "unknown"
     conflicts = conflict_counts[i] if i < len(conflict_counts) else 0
     result = results_map.get(branch, {})
+    if not result:
+        # Fuzzy: try matching by task_id extracted from branch name
+        branch_suffix = branch.split("/")[-1]
+        for task_id_candidate in results_by_task:
+            if branch_suffix.startswith(task_id_candidate):
+                result = results_by_task[task_id_candidate]
+                break
     wid = result.get("worker_id", "")
     model = get_model_for_worker(wid)
     tid = result.get("task_id", branch.split("/")[-1])
@@ -404,8 +471,14 @@ for i, branch in enumerate(sorted_branches):
     else:  # skipped / irreconcilable
         conflict_score = 1
 
-    # Score: Test impact
-    if not has_tests:
+    # Score: Test impact — use sealed test results when available
+    if sealed_per_task:
+        # Check if this task has a matching sealed test
+        if tid in sealed_per_task:
+            test_score = 10 if sealed_per_task[tid] == "pass" else 2
+        else:
+            test_score = 5  # no sealed test for this task
+    elif not has_tests:
         test_score = 5  # neutral — no test framework
     else:
         test_score = 7  # default: tests not broken (can't run inline)
