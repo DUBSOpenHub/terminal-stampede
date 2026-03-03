@@ -191,43 +191,70 @@ show_banner() {
 }
 
 show_completion() {
+    local SESSION_NAME="stampede-${RUN_ID}"
+    
+    # Collapse all agent panes — zoom monitor pane to fullscreen
+    # Kill agent panes (they're done), leaving just the monitor
+    local pane_count=$(tmux list-panes -t "$SESSION_NAME" 2>/dev/null | wc -l | tr -d ' ')
+    if [[ "$pane_count" -gt 1 ]]; then
+        # Kill all panes except pane 0 (monitor), starting from the highest index
+        for ((p = pane_count - 1; p >= 1; p--)); do
+            tmux kill-pane -t "$SESSION_NAME:0.$p" 2>/dev/null || true
+        done
+    fi
+    
+    # Play completion sound
+    afplay /System/Library/Sounds/Glass.aiff 2>/dev/null &
+    
+    sleep 0.5
     clear
-    printf "\033[1;32m"
+    
+    local G="\033[38;5;220m"; local GN="\033[38;5;46m"
+    local MT="\033[38;5;240m"; local TX="\033[38;5;252m"
+    local B="\033[1m"; local R="\033[0m"; local CY="\033[38;5;51m"
+    
+    # ─── Completion banner ───
+    printf "${GN}"
     echo ""
-    echo "╔══════════════════════════════════════════════════════╗"
-    echo "║                                                      ║"
-    echo "║        🎉  S T A M P E D E   C O M P L E T E  🎉    ║"
-    echo "║                                                      ║"
-    echo "╚══════════════════════════════════════════════════════╝"
-    printf "\033[0m"
+    echo "     ╔══════════════════════════════════════════════════════╗"
+    echo "     ║                                                      ║"
+    echo "     ║        🎉  S T A M P E D E   C O M P L E T E  🎉    ║"
+    echo "     ║                                                      ║"
+    echo "     ╚══════════════════════════════════════════════════════╝"
+    printf "${R}"
     echo ""
     
-    # Summary
+    # ─── Summary ───
     local done_count=$(find "$BASE/results" -name "*.json" -not -name ".tmp-*" -type f 2>/dev/null | wc -l | tr -d ' ')
-    echo "  ✅ Tasks completed:  $done_count / $TOTAL_TASKS"
+    local ELAPSED=$(( $(date +%s) - START_TIME ))
+    local MINS=$((ELAPSED/60)); local SECS=$((ELAPSED%60))
+    
+    printf "  ${B}${TX}✅ ${done_count}/${TOTAL_TASKS} tasks completed in ${MINS}m${SECS}s${R}\n"
     echo ""
     
-    # Per-task results
-    echo "  ── Results ──"
+    # ─── Per-task results with summaries ───
+    printf "  ${G}── Results ──${R}\n"
     for rf in "$BASE/results"/*.json; do
         [ -f "$rf" ] || continue
         local tid=$(python3 -c "import json; print(json.load(open('$rf')).get('task_id','?'))" 2>/dev/null || echo "?")
         local status=$(python3 -c "import json; print(json.load(open('$rf')).get('status','?'))" 2>/dev/null || echo "?")
+        local title=$(python3 -c "import json; r=json.load(open('$rf')); print(r.get('summary','')[:80])" 2>/dev/null || echo "")
+        local branch=$(python3 -c "import json; print(json.load(open('$rf')).get('branch',''))" 2>/dev/null || echo "")
         if [[ "$status" == "done" ]]; then
-            echo "    ✅ $tid — complete"
+            printf "    ${GN}✅${R} ${B}${TX}${tid}${R}  ${MT}→ ${branch}${R}\n"
+            [[ -n "$title" ]] && printf "       ${TX}${title}${R}\n"
         else
-            echo "    ⚠️  $tid — $status"
+            printf "    ${R}\033[38;5;203m❌${R} ${B}${TX}${tid}${R}  ${MT}— ${status}${R}\n"
         fi
     done
     
-    # Agent stats
+    # ─── Agent stats ───
     echo ""
-    echo "  ── Agents ──"
+    printf "  ${G}── Agents ──${R}\n"
     local finished=0 dead=0
     local remaining_tasks=$(find "$BASE/queue" "$BASE/claimed" -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
     for pf in "$PIDS_DIR"/worker-*.pid; do
         [ -f "$pf" ] || continue
-        local wid=$(basename "$pf" .pid)
         local wpid=$(cat "$pf")
         if kill -0 "$wpid" 2>/dev/null; then
             ((finished++))
@@ -237,31 +264,32 @@ show_completion() {
             ((dead++))
         fi
     done
-    echo "    🟢 $finished finished  ·  🔴 $dead failed"
+    printf "    ${GN}🟢 $finished finished${R}"
+    [[ $dead -gt 0 ]] && printf "  ${R}\033[38;5;203m·  🔴 $dead failed${R}"
+    echo ""
     
+    # ─── Branches ready ───
     echo ""
-    printf "\033[1;36m"
-    echo "╔══════════════════════════════════════════════════════╗"
-    echo "║                                                      ║"
-    echo "║  👈 Go back to your CLI session for the full         ║"
-    echo "║     report, shadow scores, and auto-merge.            ║"
-    echo "║                                                      ║"
-    echo "║  🦬 Auto-merge available — merges all branches into  ║"
-    echo "║     one and scores each agent's work quality.        ║"
-    echo "║                                                      ║"
-    echo "╚══════════════════════════════════════════════════════╝"
-    printf "\033[0m"
-    echo ""
-    printf "\033[2m"
-    echo "  To run another stampede, launch stampede.sh or"
-    echo "  type 'stampede' in your CLI agent and go again. 🦬"
-    echo ""
-    echo "  This window will close automatically in 60 seconds."
-    echo "  Press any key to close now."
-    printf "\033[0m"
+    local branch_count=$(cd "$REPO_PATH" 2>/dev/null && git branch --list 'stampede/task-*' 2>/dev/null | wc -l | tr -d ' ')
+    local repo_name=$(basename "${REPO_PATH:-$(pwd)}" 2>/dev/null)
+    if [[ "$branch_count" -gt 0 ]]; then
+        printf "  ${G}── Branches ──${R}\n"
+        printf "    ${TX}${branch_count} branches ready to merge on ${repo_name}${R}\n"
+        echo ""
+    fi
     
-    # Play completion sound
-    afplay /System/Library/Sounds/Glass.aiff 2>/dev/null &
+    # ─── Next steps ───
+    printf "  ${CY}╭──────────────────────────────────────────────────╮${R}\n"
+    printf "  ${CY}│${R}                                                  ${CY}│${R}\n"
+    printf "  ${CY}│${R}  ${B}${TX}Go back to your CLI session for:${R}                ${CY}│${R}\n"
+    printf "  ${CY}│${R}    ${TX}• Full report and shadow scores${R}                ${CY}│${R}\n"
+    printf "  ${CY}│${R}    ${TX}• Auto-merge all branches into one${R}             ${CY}│${R}\n"
+    printf "  ${CY}│${R}    ${TX}• Model leaderboard update${R}                     ${CY}│${R}\n"
+    printf "  ${CY}│${R}                                                  ${CY}│${R}\n"
+    printf "  ${CY}╰──────────────────────────────────────────────────╯${R}\n"
+    echo ""
+    printf "  ${MT}This window will close in 60 seconds. Press any key to close now.${R}\n"
+    printf "  ${MT}To run again: stampede.sh or type 'stampede' in your CLI agent. 🦬${R}\n"
     
     # Wait for keypress or timeout
     read -t 60 -n 1 2>/dev/null || true
