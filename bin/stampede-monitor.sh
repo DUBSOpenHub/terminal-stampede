@@ -177,7 +177,7 @@ except: pass
         printf "  ${CY}╭──────────────────────────────────────────────────────╮${R}\n"
         printf "  ${CY}│${R}                                                      ${CY}│${R}\n"
         printf "  ${CY}│${R}  ${G}🦬${R} ${B}${TX}Merge command copied to clipboard!${R}                ${CY}│${R}\n"
-        printf "  ${CY}│${R}     ${TX}Paste it in your terminal to:${R}                   ${CY}│${R}\n"
+        printf "  ${CY}│${R}     ${TX}Open a regular terminal and paste (Cmd+V)${R}        ${CY}│${R}\n"
         printf "  ${CY}│${R}                                                      ${CY}│${R}\n"
         printf "  ${CY}│${R}     ${MT}→ Auto-merge all branches into one${R}               ${CY}│${R}\n"
         printf "  ${CY}│${R}     ${MT}→ Shadow-score each agent's work${R}                 ${CY}│${R}\n"
