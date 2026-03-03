@@ -236,6 +236,18 @@ Every vendor publishes benchmarks. Every benchmark uses synthetic tests. None of
 
 The stampede leaderboard answers that question empirically. Every run shadow-scores each model's work. Scores accumulate across runs. Over time, you get a ranking built from real work on your real codebase — not from HumanEval, not from vendor marketing, not from someone else's synthetic tests. From your code, your tasks, your results.
 
+```
+📊 Model Leaderboard (12 runs)
+─────────────────────────────────────────────────────
+  claude-sonnet-4.5         avg 44.2/50  (18 branches)
+  gpt-5.1-codex             avg 42.8/50  (14 branches)
+  claude-haiku-4.5          avg 41.1/50  (22 branches)
+  gpt-5.1                   avg 39.7/50  (16 branches)
+  gemini-3-pro              avg 38.4/50  (10 branches)
+
+📈 Model stats updated (12 total runs)
+```
+
 ---
 
 ## 🏇 Usage
@@ -262,6 +274,8 @@ Options:
 | `Ctrl-B z` again | Zoom back out to the grid |
 | `Ctrl-B arrow` | Move between panes |
 | `Ctrl-B d` | Detach (agents keep running) |
+
+> 💬 **Zoom into any pane and talk to the agent mid-task.** Every pane is a live session — watch, redirect, or course-correct while the stampede runs.
 
 ---
 
