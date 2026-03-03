@@ -158,16 +158,33 @@ except: pass
             [ -f "$rf" ] || continue
             tid=$(python3 -c "import json; print(json.load(open('$rf')).get('task_id','?'))" 2>/dev/null || echo "?")
             status=$(python3 -c "import json; print(json.load(open('$rf')).get('status','?'))" 2>/dev/null || echo "?")
+            title=$(python3 -c "import json; r=json.load(open('$rf')); print(r.get('title', r.get('summary','')[:60]))" 2>/dev/null || echo "")
             branch=$(python3 -c "import json; print(json.load(open('$rf')).get('branch',''))" 2>/dev/null || echo "")
             if [[ "$status" == "done" ]]; then
-                printf "    ${GN}✅${R} ${TX}${tid}${R}  ${MT}→ ${branch}${R}\n"
+                printf "    ${GN}✅${R} ${TX}${tid}: ${title}${R}  ${MT}→ ${branch}${R}\n"
             else
-                printf "    ${RD}❌${R} ${TX}${tid} — ${status}${R}\n"
+                printf "    ${RD}❌${R} ${TX}${tid}: ${title} — ${status}${R}\n"
             fi
         done
         
+        # Build merge command and copy to clipboard
+        REPO_PATH=$(python3 -c "import json; print(json.load(open('$BASE/state.json')).get('repo_path',''))" 2>/dev/null || echo "")
+        MERGE_CMD="stampede-merge.sh --run-id ${RUN_ID} --repo ${REPO_PATH}"
+        echo "$MERGE_CMD" | pbcopy 2>/dev/null || true
+        
+        CY="\033[38;5;51m"
         echo ""
-        printf "  ${G}Go back to your CLI session for shadow scores and auto-merge.${R}\n\n"
+        printf "  ${CY}╭──────────────────────────────────────────────────────╮${R}\n"
+        printf "  ${CY}│${R}                                                      ${CY}│${R}\n"
+        printf "  ${CY}│${R}  ${G}🦬${R} ${B}${TX}Merge command copied to clipboard!${R}                ${CY}│${R}\n"
+        printf "  ${CY}│${R}     ${TX}Paste it in your terminal to:${R}                   ${CY}│${R}\n"
+        printf "  ${CY}│${R}                                                      ${CY}│${R}\n"
+        printf "  ${CY}│${R}     ${MT}→ Auto-merge all branches into one${R}               ${CY}│${R}\n"
+        printf "  ${CY}│${R}     ${MT}→ Shadow-score each agent's work${R}                 ${CY}│${R}\n"
+        printf "  ${CY}│${R}     ${MT}→ Update the model leaderboard${R}                   ${CY}│${R}\n"
+        printf "  ${CY}│${R}                                                      ${CY}│${R}\n"
+        printf "  ${CY}╰──────────────────────────────────────────────────────╯${R}\n"
+        echo ""
         printf "  ${MT}Press any key to close. Auto-closes in 60s.${R}\n"
         
         read -t 60 -n 1 2>/dev/null || true
