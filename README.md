@@ -277,6 +277,8 @@ Options:
 
 > 💬 **Zoom into any pane and talk to the agent mid-task.** Every pane is a live session — watch, redirect, or course-correct while the stampede runs.
 
+> 🖥️ **Best on ultrawide.** 20 agents on a 49" ultrawide gives each one the space of a normal terminal. One monitor, 20 AI brains, all visible at once.
+
 ---
 
 ## 🏗️ Architecture
