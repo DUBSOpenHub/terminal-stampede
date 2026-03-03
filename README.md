@@ -105,6 +105,33 @@ A Terminal window opens. Eight panes tile across the screen. Gold ⚡ borders sh
 
 ---
 
+## 📊 We Pointed It at Itself
+
+To test stampede, we pointed it at this repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the worker agent, updating the changelog, and more. Nobody touched anything. They just ran.
+
+| | Result |
+|---|---|
+| Tasks | 8 |
+| Agents | 8 (claude-haiku-4.5) |
+| Wall clock | ~6 minutes |
+| Success rate | 8/8 |
+| Coordination failures | 0 |
+
+| Task | Changes |
+|------|---------|
+| Defensive error handling for stampede.sh | +218 -33 |
+| CONTRIBUTING.md (from scratch) | +219 |
+| Worker agent hard-exit rules | +218 -33 |
+| Orchestrator failure recovery docs | +132 -1 |
+| CHANGELOG update from git history | +100 |
+| copilot-instructions.md improvements | +85 -3 |
+| Blog accuracy review | +30 -30 |
+| Install.sh: uninstall, --check, versioning | +100 |
+
+8 branches. ~800 lines of real changes. The simplest possible architecture — files on disk, atomic renames, no coordination server — was also the most reliable. Nothing broke. Nothing conflicted. The agents didn't even know each other existed.
+
+---
+
 ## 💡 The Problem
 
 You're a developer. Monday morning. Your codebase needs error handling added to 4 modules, test coverage expanded, docs updated, and the CLI cleaned up. That's 8 tasks.
@@ -280,33 +307,6 @@ Options:
 | 500-word result cap | Verbose summaries would blow the orchestrator's context |
 | `--max-autopilot-continues 30` | Prevents runaway agents from burning unlimited quota |
 | Lightweight models for grunt work | Save the powerful model for synthesis, use fast ones for parallel tasks |
-
----
-
-## 📊 We Pointed It at Itself
-
-To test stampede, we pointed it at this repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the worker agent, updating the changelog, and more. Nobody touched anything. They just ran.
-
-| | Result |
-|---|---|
-| Tasks | 8 |
-| Agents | 8 (claude-haiku-4.5) |
-| Wall clock | ~6 minutes |
-| Success rate | 8/8 |
-| Coordination failures | 0 |
-
-| Task | Changes |
-|------|---------|
-| Defensive error handling for stampede.sh | +218 -33 |
-| CONTRIBUTING.md (from scratch) | +219 |
-| Worker agent hard-exit rules | +218 -33 |
-| Orchestrator failure recovery docs | +132 -1 |
-| CHANGELOG update from git history | +100 |
-| copilot-instructions.md improvements | +85 -3 |
-| Blog accuracy review | +30 -30 |
-| Install.sh: uninstall, --check, versioning | +100 |
-
-8 branches. ~800 lines of real changes. The simplest possible architecture — files on disk, atomic renames, no coordination server — was also the most reliable. Nothing broke. Nothing conflicted. The agents didn't even know each other existed.
 
 ---
 
