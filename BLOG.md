@@ -33,7 +33,7 @@ I already had the pieces. Copilot CLI supports custom agents (`--agent`). tmux c
 The idea was simple:
 
 1. Write task descriptions as JSON files in a `queue/` folder
-2. Spin up N tmux panes, each running a CLI agent session with a worker agent
+2. Spin up N tmux panes, each running a CLI agent session
 3. Each agent grabs a task file by renaming it (atomic, race-safe)
 4. Agent does the actual work on its own git branch
 5. Agent drops a result file when done
@@ -45,7 +45,7 @@ I had a hackathon's contestants build it. Eight models, three files each, two el
 
 ## What I learned by running it
 
-The first few launches were rough. Workers would start but not claim tasks. The autopilot flag only works in prompt mode (`-p`), not interactive mode (`-i`) — a subtle CLI distinction that cost me three debug cycles. Workers would sometimes finish but not write a result because they hit the autopilot continuation cap. The orchestrator couldn't tell if a worker was thinking or dead.
+The first few launches were rough. Agents would start but not claim tasks. The autopilot flag only works in prompt mode (`-p`), not interactive mode (`-i`) — a subtle CLI distinction that cost me three debug cycles. Agents would sometimes finish but not write a result because they hit the autopilot continuation cap. The orchestrator couldn't tell if an agent was thinking or dead.
 
 Each failure mode had the same fix: keep it simple. PID checks instead of heartbeats. Generation counters instead of dedup logic. Atomic file renames instead of lock files. Every time I reached for complexity, the filesystem already had the answer. The simpler the system, the more reliable the output.
 
@@ -71,7 +71,7 @@ This is an experiment, not a product. Things I don't know yet:
 
 **Does the quality hold up?** Twenty fast agents might produce twenty mediocre results. I haven't done rigorous quality comparison between "one powerful session doing all tasks carefully" versus "many lightweight sessions doing 1 task each quickly." That's a Shadow Score experiment waiting to happen.
 
-**How far does the filesystem queue scale?** For 8-20 workers it's fine. For 100? Probably not. But 100 parallel AI agents on one repo is a problem I'm happy to have later.
+**How far does the filesystem queue scale?** For 8-20 agents it's fine. For 100? Probably not. But 100 parallel AI agents on one repo is a problem I'm happy to have later.
 
 **Is the orchestrator skill reliable as a live invocation?** I've been building manifests manually and calling the launcher directly. The skill file describes how to parse natural language commands, but it hasn't been battle-tested as a real "say stampede and it works" experience yet.
 
@@ -89,7 +89,7 @@ The architecture is tool-agnostic. It was built with GitHub Copilot CLI, but the
 
 ## We pointed it at itself
 
-To test it, we pointed stampede at its own repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the worker agent, updating the changelog. Nobody touched anything. They just ran.
+To test it, we pointed stampede at its own repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the agent prompts, updating the changelog. Nobody touched anything. They just ran.
 
 8/8 success. ~6 minutes. Zero coordination failures. ~800 lines of real changes across 8 branches. The simplest possible architecture was also the most reliable. No frameworks, no servers, no message brokers. Just files on disk and terminals.
 

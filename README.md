@@ -107,7 +107,7 @@ A Terminal window opens. Eight panes tile across the screen. Gold ⚡ borders sh
 
 ## 📊 We Pointed It at Itself
 
-To test stampede, we pointed it at this repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the worker agent, updating the changelog, and more. Nobody touched anything. They just ran.
+To test stampede, we pointed it at this repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the agent prompts, updating the changelog, and more. Nobody touched anything. They just ran.
 
 | | Result |
 |---|---|
@@ -121,7 +121,7 @@ To test stampede, we pointed it at this repo. 8 agents ran simultaneously on the
 |------|---------|
 | Defensive error handling for stampede.sh | +218 -33 |
 | CONTRIBUTING.md (from scratch) | +219 |
-| Worker agent hard-exit rules | +218 -33 |
+| Agent hard-exit rules | +218 -33 |
 | Orchestrator failure recovery docs | +132 -1 |
 | CHANGELOG update from git history | +100 |
 | copilot-instructions.md improvements | +85 -3 |
@@ -305,7 +305,7 @@ Options:
 | Decision | Why |
 |----------|-----|
 | Filesystem as message queue | Simpler than anything else. `ls queue/` is your debugger |
-| Agent for workers, skill for orchestrator | Skills load globally, agents load per-session. Clean role isolation |
+| Agents for tasks, skill for orchestrator | Skills load globally, agents load per-session. Clean role isolation |
 | Branch per task | No two agents touch main. Conflicts caught at synthesis |
 | Auto-merger with AI conflict resolution | Reads both task descriptions to resolve conflicts semantically, not just syntactically |
 | Weighted shadow scoring | Completeness (30%) matters most; conflict friendliness (10%) is partly luck |
