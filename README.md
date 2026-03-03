@@ -10,6 +10,11 @@
 
 ---
 
+- 🏠 **Zero-infrastructure local swarm**
+- 🖥️ **tmux as execution surface**
+- 📂 **Filesystem as atomic message bus**
+- 👀 **Human-in-the-loop observability**
+
 **One terminal. Eight AI agents. All running at the same time.**
 
 You've been doing AI coding one task at a time. Ask, wait, ask again, wait again. Terminal Stampede splits your terminal into 8 panes, drops an AI agent into each one, and lets them all charge through your codebase simultaneously. Each agent gets its own brain, its own branch, its own mission. You watch them work in real time through the gold ⚡ borders. Minutes later, everything's done.
