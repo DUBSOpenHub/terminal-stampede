@@ -77,7 +77,7 @@ Open a Copilot CLI session and tell the stampede skill what to do:
 stampede 8 agents on ~/my-project — add error handling, write tests, improve docs
 ```
 
-The orchestrator reads your codebase, generates 8 task files, launches the fleet, and monitors progress. You watch.
+The orchestrator reads your codebase, generates task files, launches the fleet, and monitors progress. You watch.
 
 **Option B: From the command line** (full control)
 
