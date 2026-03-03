@@ -165,6 +165,9 @@ When all results are in, the orchestrator checks if any two agents modified the 
 
 ### Auto-merge with shadow scoring
 
+> **"Did you define what good looks like before AI ran, or after?"**
+> Most people using AI coding tools have no definition of quality — they eyeball the output and hope for the best. Stampede bakes evaluation into the runtime itself. The scoring criteria are defined before agents run. Measurement happens silently during and after. The agents never know they're being scored.
+
 After all agents finish, the merger agent combines every branch into one. It merges sequentially (smallest changes first to build a clean base), resolves conflicts using AI that reads both task descriptions to understand intent, and skips anything irreconcilable.
 
 While merging, the merger silently **shadow-scores** each agent's work across 3 layers:
