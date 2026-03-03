@@ -17,7 +17,9 @@ You've been doing AI coding one task at a time. Ask, wait, ask again, wait again
 ---
 
 
-<img width="1698" height="1034" alt="Screenshot 2026-03-02 at 3 40 31 PM" src="https://github.com/user-attachments/assets/e03d4b14-0430-40e7-8410-3eef71b7250a" />
+<p align="center">
+  <img src="assets/stampede-agents.gif" alt="8 AI agents coding simultaneously in Terminal Stampede" width="1200" />
+</p>
 
 ---
 
