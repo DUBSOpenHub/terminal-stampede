@@ -17,7 +17,7 @@ We take the security of Terminal Stampede seriously. If you discover a security 
 
 ### How to Report
 
-Email security details to: **security@example.com**
+Use [GitHub's private vulnerability reporting](https://github.com/DUBSOpenHub/terminal-stampede/security/advisories/new) to submit a report directly on this repository.
 
 Include the following information:
 - Description of the vulnerability
