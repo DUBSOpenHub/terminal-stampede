@@ -32,6 +32,8 @@ BELL=$'\a'
 ALERTED_FILE="$BASE/.alerted"  # track which agents already belled
 RUNTIME_STATS="$BASE/runtime-stats.json"  # Layer 1 shadow scoring data
 STUCK_COUNTS="$BASE/.stuck-counts"  # track per-agent stuck events
+# Derive REPO_PATH from state.json (monitor doesn't receive it directly)
+REPO_PATH=$(python3 -c "import json; print(json.load(open('$BASE/state.json')).get('repo_path',''))" 2>/dev/null || echo "")
 touch "$ALERTED_FILE" 2>/dev/null || true
 touch "$STUCK_COUNTS" 2>/dev/null || true
 START_TIME=$(date +%s)
@@ -270,8 +272,12 @@ show_completion() {
     
     # ─── Branches ready ───
     echo ""
-    local branch_count=$(cd "$REPO_PATH" 2>/dev/null && git branch --list 'stampede/task-*' 2>/dev/null | wc -l | tr -d ' ')
-    local repo_name=$(basename "${REPO_PATH:-$(pwd)}" 2>/dev/null)
+    local branch_count=0
+    local repo_name="repo"
+    if [[ -n "$REPO_PATH" ]] && [[ -d "$REPO_PATH/.git" ]]; then
+        branch_count=$(cd "$REPO_PATH" && git branch --list 'stampede/task-*' 2>/dev/null | wc -l | tr -d ' ')
+        repo_name=$(basename "$REPO_PATH")
+    fi
     if [[ "$branch_count" -gt 0 ]]; then
         printf "  ${G}── Branches ──${R}\n"
         printf "    ${TX}${branch_count} branches ready to merge on ${repo_name}${R}\n"

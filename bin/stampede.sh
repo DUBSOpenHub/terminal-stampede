@@ -543,7 +543,7 @@ for ((i = 1; i <= WORKER_COUNT; i++)); do
     task_label="${TASK_NAMES[$((i-1))]:-task}"
     worker_model=$(get_worker_model "$i")
     tmux select-pane -t "$SESSION_NAME:0.${PANE_IDX}" \
-        -T "${worker_model} · ${task_label}" 2>/dev/null || true
+        -T "Agent #${i} · ${worker_model} · ${task_label}" 2>/dev/null || true
     PANE_IDX=$((PANE_IDX + 1))
 done
 
