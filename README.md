@@ -4,7 +4,7 @@
   <img src="assets/stampede-agents.gif" alt="8 AI agents coding simultaneously in Terminal Stampede" width="1200" />
 </p>
 
-**One terminal. Eight AI agents. All running at the same time.**
+**A parallel agent runtime for your terminal.** Run up to 20 AI coding agents simultaneously, each in its own tmux pane with its own context window and git branch. Works with any CLI agent that can take a prompt and write code.
 
 - 🏠 **Zero-infrastructure local swarm**
 - 🖥️ **tmux as execution surface**
