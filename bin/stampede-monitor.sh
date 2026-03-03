@@ -19,8 +19,15 @@ else
     exit 1
 fi
 PIDS_DIR="$BASE/pids"
-TOTAL_TASKS=$(find "$BASE/queue" "$BASE/claimed" "$BASE/results" -name "*.json" -not -name ".tmp-*" -type f 2>/dev/null | wc -l | tr -d ' ')
-STUCK_THRESHOLD=180  # seconds without progress = stuck
+# Count total unique tasks across all directories (handles tasks that moved between dirs)
+TOTAL_TASKS=$(find "$BASE/queue" "$BASE/claimed" "$BASE/results" -name "*.json" -not -name ".tmp-*" -not -name "state.json" -not -name "fleet.json" -not -name "runtime-stats.json" -not -name "merge-report.json" -type f 2>/dev/null | xargs -I{} basename {} | sort -u | wc -l | tr -d ' ')
+# Fallback: read from state.json if available
+if [[ -f "$BASE/state.json" ]]; then
+    STATE_TOTAL=$(python3 -c "import json; s=json.load(open('$BASE/state.json')); print(s.get('total_tasks', 0))" 2>/dev/null || echo 0)
+    [[ "$STATE_TOTAL" -gt "$TOTAL_TASKS" ]] && TOTAL_TASKS="$STATE_TOTAL"
+fi
+[[ "$TOTAL_TASKS" -eq 0 ]] && TOTAL_TASKS=1  # prevent div-by-zero
+STUCK_THRESHOLD=120  # seconds without progress = stuck
 BELL=$'\a'
 ALERTED_FILE="$BASE/.alerted"  # track which agents already belled
 RUNTIME_STATS="$BASE/runtime-stats.json"  # Layer 1 shadow scoring data
@@ -271,7 +278,7 @@ while true; do
     claimed=$(find "$BASE/claimed" -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
     done_count=$(find "$BASE/results" -name "*.json" -not -name ".tmp-*" -type f 2>/dev/null | wc -l | tr -d ' ')
     
-    # Stuck agent detection (keeps bell/alert behavior)
+    # Stuck agent detection
     stuck_found=false
     for pf in "$PIDS_DIR"/worker-*.pid; do
         [ -f "$pf" ] || continue
@@ -279,13 +286,22 @@ while true; do
         wpid=$(cat "$pf")
         
         if kill -0 "$wpid" 2>/dev/null; then
-            if [[ "$(uname)" == "Darwin" ]]; then
-                pid_age=$(( $(date +%s) - $(stat -f %m "$pf") ))
-            else
-                pid_age=$(( $(date +%s) - $(stat -c %Y "$pf") ))
-            fi
+            # Check if any claimed task for this worker is stale
+            local is_stuck=false
+            for cf in "$BASE/claimed"/*.json; do
+                [[ -f "$cf" ]] || continue
+                if [[ "$(uname)" == "Darwin" ]]; then
+                    claim_age=$(( $(date +%s) - $(stat -f %m "$cf") ))
+                else
+                    claim_age=$(( $(date +%s) - $(stat -c %Y "$cf") ))
+                fi
+                if [[ $claim_age -gt $STUCK_THRESHOLD ]]; then
+                    is_stuck=true
+                    break
+                fi
+            done
             
-            if [[ $pid_age -gt $STUCK_THRESHOLD ]] && [[ $claimed -gt 0 ]]; then
+            if $is_stuck; then
                 if ! grep -q "^${wid}$" "$ALERTED_FILE" 2>/dev/null; then
                     printf "$BELL"
                     echo "$wid" >> "$ALERTED_FILE"
@@ -300,6 +316,13 @@ except: pass
 " 2>/dev/null || true
                 fi
                 stuck_found=true
+                
+                # Highlight the stuck agent's tmux pane with red border
+                local agent_idx=${wid#worker-}
+                tmux select-pane -t "${SESSION_NAME:-stampede-${RUN_ID}}:0.${agent_idx}" \
+                    -P 'fg=default,bg=default' 2>/dev/null || true
+                tmux set-option -p -t "${SESSION_NAME:-stampede-${RUN_ID}}:0.${agent_idx}" \
+                    pane-border-style "fg=colour203" 2>/dev/null || true
             fi
         fi
     done
