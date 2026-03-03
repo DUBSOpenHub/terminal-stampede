@@ -1,3 +1,4 @@
+# Standardizes code editor settings (indentation, line endings, encoding) across the repository and IDE/editor plugins.
 # EditorConfig is awesome: https://EditorConfig.org
 
 # top-most EditorConfig file
