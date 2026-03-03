@@ -56,7 +56,7 @@ cd terminal-stampede
 chmod +x install.sh && ./install.sh
 ```
 
-Three files land in their working locations:
+Six files land in their working locations:
 
 | File | Location | Purpose |
 |------|----------|---------|
@@ -163,8 +163,6 @@ Terminal Stampede does something different. Each agent is a fully independent CL
 Branches are named `stampede/task-001`, `stampede/task-002`, etc. After a run, the merger combines them into `stampede/merged-{run_id}`. Task branches stay around for inspection until you clean up with `--teardown`.
 
 The "message queue" is just files on disk. The "orchestrator" is just a script. The "agent runtime" is just your terminal. Point it at any repo.
-
----
 
 ---
 

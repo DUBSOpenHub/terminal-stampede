@@ -87,7 +87,7 @@ The architecture is tool-agnostic. It was built with GitHub Copilot CLI, but the
 
 ## We pointed it at itself
 
-To test it, we pointed stampede at its own repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the agent prompts, updating the changelog. Nobody touched anything. They just ran.
+To test it, we pointed Terminal Stampede at its own repo. 8 agents ran simultaneously on the terminal-stampede codebase — adding error handling, creating docs, improving the agent prompts, updating the changelog. Nobody touched anything. They just ran.
 
 8/8 success. ~6 minutes. Zero coordination failures. ~800 lines of real changes across 8 branches. The simplest possible architecture was also the most reliable. No frameworks, no servers, no message brokers. Just files on disk and terminals.
 
