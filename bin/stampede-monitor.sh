@@ -86,17 +86,16 @@ while true; do
                 if [[ "$rw" == "$wid" ]]; then has_result=true; break; fi
             done
             
-            pid_file="$PIDS_DIR/${wid}.pid"
-            is_alive=false
-            if [[ -f "$pid_file" ]]; then
-                wpid=$(cat "$pid_file")
-                kill -0 "$wpid" 2>/dev/null && is_alive=true
-            fi
+            # Check if tmux pane is still active (more reliable than stored PIDs)
+            SESSION_NAME="stampede-${RUN_ID}"
+            pane_alive=false
+            pane_cmd=$(tmux list-panes -t "$SESSION_NAME" -F '#{pane_index} #{pane_dead}' 2>/dev/null | awk "\$1==$idx {print \$2}" || echo "1")
+            [[ "$pane_cmd" != "1" ]] && pane_alive=true
             
             remaining=$((queued + claimed))
             if $has_result; then
                 ICON="${GN}✓"; WORD="done"
-            elif $is_alive; then
+            elif $pane_alive; then
                 ICON="${AM}●"; WORD="active"
             elif [[ $remaining -eq 0 ]]; then
                 ICON="${GN}✓"; WORD="done"
