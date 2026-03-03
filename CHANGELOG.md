@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.3.0 — 2026-03-03
+
+### Added
+- **CLI-agnostic architecture**: `--agent-cmd` flag on `stampede.sh` supports any CLI coding agent (Aider, Claude Code, custom commands)
+- `{prompt}` and `{model}` placeholders in custom agent commands
+- `~/.stampede/` as neutral config/stats path (legacy `~/.copilot/` fallback preserved)
+
+### Changed
+- Prerequisites: `gh` and `gh copilot` now optional (only needed when using default Copilot CLI)
+- Quick Start reordered: CLI-agnostic command-line usage first, Copilot CLI second
+- Model stats persist to `~/.stampede/model-stats.json` (was `~/.copilot/stampede-model-stats.json`)
+- Monitor/demo messages no longer reference Copilot CLI specifically
+- SKILL.md description updated to "CLI coding agents"
+- Clarified agent count is configurable (default 3, sweet spot 6–8)
+
+### Fixed
+- Install script now documents that skill/agent paths are Copilot CLI–specific
+
 ## 1.2.0 — 2026-03-02
 
 ### Added
@@ -57,21 +75,3 @@ Initial release. Built during a Havoc Hackathon.
 - Branch per task prevents git conflicts
 - 500-word result cap prevents context explosion
 - `--max-autopilot-continues 30` prevents quota runaway
-
-## 1.3.0 — 2026-03-03
-
-### Added
-- **CLI-agnostic architecture**: `--agent-cmd` flag on `stampede.sh` supports any CLI coding agent (Aider, Claude Code, custom commands)
-- `{prompt}` and `{model}` placeholders in custom agent commands
-- `~/.stampede/` as neutral config/stats path (legacy `~/.copilot/` fallback preserved)
-
-### Changed
-- Prerequisites: `gh` and `gh copilot` now optional (only needed when using default Copilot CLI)
-- Quick Start reordered: CLI-agnostic command-line usage first, Copilot CLI second
-- Model stats persist to `~/.stampede/model-stats.json` (was `~/.copilot/stampede-model-stats.json`)
-- Monitor/demo messages no longer reference Copilot CLI specifically
-- SKILL.md description updated to "CLI coding agents"
-- Clarified agent count is configurable (default 3, sweet spot 6–8)
-
-### Fixed
-- Install script now documents that skill/agent paths are Copilot CLI–specific
