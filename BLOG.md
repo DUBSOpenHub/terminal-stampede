@@ -24,7 +24,7 @@ Dark Factory builds things, but how do you know the agents themselves are well-c
 
 But Havoc Hackathon has a constraint: every contestant runs as a sub-agent inside the same session. The orchestrator dispatches them, collects results, and scores them. They each get their own context, but they're managed processes — the orchestrator is the bottleneck, and contestants can't interact with the repo the way a real developer would (reading files, editing code, running tests, iterating on failures).
 
-I was watching a hackathon run — 8 models competing to build a multi-agent framework (meta, I know) — and I thought: what if each contestant had its own terminal? Not a managed sub-agent, but a completely independent CLI session with its own working memory, its own tool access, its own ability to read files, edit code, and run tests.
+I was watching a hackathon run with competing models to build a multi-agent framework (meta, I know) — and I thought: what if each contestant had its own terminal? Not a managed sub-agent, but a completely independent CLI session with its own working memory, its own tool access, its own ability to read files, edit code, and run tests.
 
 I already had the pieces. Copilot CLI supports custom agents (`--agent`). tmux can split a terminal into arbitrary panes. Filesystems are already message queues if you squint. And the same architecture would work with any CLI coding agent.
 
