@@ -20,18 +20,6 @@
 - 🧱 **Simplicity over complexity** — no frameworks, no servers, no message brokers. The simpler the system, the more reliable the output.
 - 🎯 **[Shadow scoring](https://github.com/DUBSOpenHub/shadow-score-spec)** — quality defined before agents run, measured silently after
 
-```
-🦬 Shadow Scorecard (weighted)
-═══════════════════════════════════════════════════════════════════════════
- Agent       Model              Comp  Scope  Qual  Conflt  Test   Total  +/-
-                                (30%)  (25%) (20%)  (10%) (15%)   /50
- ─────────────────────────────────────────────────────────────────────────
- task-001    claude-sonnet-4.5    10     10     8     10     5    44.2  ⚡+2
- task-002    gpt-5.1              10     10     8     10     5    44.2
- task-003    claude-sonnet-4.5    10     10     8     10     5    44.2  🐌-1
-═══════════════════════════════════════════════════════════════════════════
-```
-
 ---
 
 You've been doing AI coding one task at a time. Ask, wait, ask again, wait again. Terminal Stampede splits your terminal into multiple panes, drops an AI agent into each one, and lets them all charge through your codebase simultaneously. Each agent gets its own brain, its own branch, its own mission. You watch them work in real time through the gold ⚡ borders. Minutes later, everything's done.
