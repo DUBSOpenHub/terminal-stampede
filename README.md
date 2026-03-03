@@ -17,6 +17,7 @@
 - 🖥️ **tmux as execution surface**
 - 📂 **Filesystem as atomic message bus**
 - 👀 **Human-in-the-loop observability**
+- 🧱 **Simplicity over complexity** — no frameworks, no servers, no message brokers. The simpler the system, the more reliable the output.
 - 🎯 **[Shadow scoring](https://github.com/DUBSOpenHub/shadow-score-spec)** — quality defined before agents run, measured silently after
 
 ```
@@ -30,8 +31,6 @@
  task-003    claude-sonnet-4.5    10     10     8     10     5    44.2  🐌-1
 ═══════════════════════════════════════════════════════════════════════════
 ```
-
-- 🧱 **Simplicity over complexity** — no frameworks, no servers, no message brokers. The simpler the system, the more reliable the output.
 
 ---
 
