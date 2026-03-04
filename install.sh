@@ -24,8 +24,8 @@ cp "$SCRIPT_DIR/skills/SKILL.md" "$SKILL_DIR/SKILL.md"
 echo "  ✅ Orchestrator skill → $SKILL_DIR/SKILL.md"
 
 # Install worker agent
-cp "$SCRIPT_DIR/agents/stampede-worker.agent.md" "$AGENT_DIR/stampede-worker.agent.md"
-echo "  ✅ Agent → $AGENT_DIR/stampede-worker.agent.md"
+cp "$SCRIPT_DIR/agents/stampede-agent.agent.md" "$AGENT_DIR/stampede-agent.agent.md"
+echo "  ✅ Agent → $AGENT_DIR/stampede-agent.agent.md"
 
 # Install merger agent
 cp "$SCRIPT_DIR/agents/stampede-merger.agent.md" "$AGENT_DIR/stampede-merger.agent.md"

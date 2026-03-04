@@ -855,7 +855,7 @@ Offer: `stampede teardown RUN_ID`, `stampede resume RUN_ID`, branch links.
 - [ ] Run directory with all 5 subdirectories
 - [ ] Task manifests are valid JSON in queue/
 - [ ] `~/bin/stampede.sh` is executable
-- [ ] `~/.stampede/agents/stampede-worker.agent.md` is installed (or equivalent for your CLI agent)
+- [ ] `~/.stampede/agents/stampede-agent.agent.md` is installed (or equivalent for your CLI agent)
 - [ ] tmux is available
 - [ ] Target repo has .git directory
 - [ ] `--max-autopilot-continues 30` on agents

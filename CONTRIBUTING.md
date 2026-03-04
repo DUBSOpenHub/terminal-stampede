@@ -29,7 +29,7 @@ The codebase is intentionally small:
 | `bin/stampede-merge.sh` | Auto-merger with shadow scoring |
 | `bin/stampede-demo.sh` | Zero-dependency visual demo |
 | `skills/SKILL.md` | Orchestrator (Copilot CLI skill format) |
-| `agents/stampede-worker.agent.md` | Worker agent (Copilot CLI agent format) |
+| `agents/stampede-agent.agent.md` | Worker agent (Copilot CLI agent format) |
 | `agents/stampede-merger.agent.md` | Merger agent (Copilot CLI agent format) |
 | `install.sh` | Installer |
 

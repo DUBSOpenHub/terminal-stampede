@@ -63,7 +63,7 @@ Initial release. Built during a Havoc Hackathon.
 
 ### Features
 - Orchestrator skill (`SKILL.md`) with natural language parsing, task decomposition, polling, dead agent recovery, crash recovery, conflict detection
-- Agent (`stampede-worker.agent.md`) with atomic task claiming, git branch isolation, autonomous code work, structured JSONL logging
+- Agent (`stampede-agent.agent.md`) with atomic task claiming, git branch isolation, autonomous code work, structured JSONL logging
 - Launcher (`stampede.sh`) with 8-prerequisite validation, tmux tiled layout, monitor pane, PID tracking via process tree walking, auto-open Terminal, teardown mode
 - Gold ⚡ pane borders with model + task labels
 - Filesystem-based IPC with atomic `mv` operations

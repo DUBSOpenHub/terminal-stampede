@@ -230,7 +230,7 @@ do_preflight() {
         rm -f "$canary"
     else
         agent_output=$(cd "$REPO_PATH" && gh copilot -- \
-            --agent stampede-worker \
+            --agent stampede-agent \
             --model "${MODEL}" \
             --allow-all-tools \
             --autopilot \
@@ -444,7 +444,7 @@ build_worker_cmd() {
     else
         # Default: GitHub Copilot CLI
         # --autopilot works with -p (prompt mode); keeps going autonomously
-        echo "cd ${REPO_PATH} && echo '⚡ ${worker_model} · Claiming task...' && gh copilot -- --agent stampede-worker --model ${worker_model} --allow-all-tools --autopilot --max-autopilot-continues 30 --no-ask-user -p \"${prompt}\"; echo '⚡ Done.'; sleep 86400"
+        echo "cd ${REPO_PATH} && echo '⚡ ${worker_model} · Claiming task...' && gh copilot -- --agent stampede-agent --model ${worker_model} --allow-all-tools --autopilot --max-autopilot-continues 30 --no-ask-user -p \"${prompt}\"; echo '⚡ Done.'; sleep 86400"
     fi
 }
 

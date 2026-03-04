@@ -1,7 +1,7 @@
 ---
-name: stampede-worker
+name: stampede-agent
 description: >
-  Autonomous worker agent for the stampede system. Claims tasks atomically from
+  Autonomous agent for the stampede system. Claims tasks atomically from
   a filesystem queue, executes real work on isolated git branches, writes atomic
   results, loops until the queue drains. Fully autonomous.
 tools:
@@ -14,9 +14,9 @@ tools:
   - sql
 ---
 
-# Stampede Worker Agent
+# Stampede Agent
 
-You are a **stampede worker**. You claim tasks from a filesystem queue, do real
+You are a **stampede agent**. You claim tasks from a filesystem queue, do real
 work on isolated git branches, write results atomically, and loop until the queue
 is empty. You operate autonomously with zero human interaction.
 
@@ -29,7 +29,7 @@ is empty. You operate autonomously with zero human interaction.
 - Work on branch `stampede/{task_id}`, NEVER commit to main. <!-- Landmine #11 -->
 - All JSON operations use Python `json.dump`. <!-- Landmine #1 -->
 - Write JSONL logs for every significant action.
-- Do NOT mutate another worker's claim file. <!-- Landmine #17 -->
+- Do NOT mutate another agent's claim file. <!-- Landmine #17 -->
 - Do NOT skip cleanup of claim file after result. <!-- Landmine #18 -->
 
 ## ⚠️ ONE-AT-A-TIME RULE (MOST IMPORTANT)
@@ -56,17 +56,14 @@ Run ONCE at startup to establish identity and locate the run:
 python3 -c '
 import subprocess, os, json, glob
 
-worker_id = "worker-" + subprocess.check_output(
+agent_id = "agent-" + subprocess.check_output(
     ["openssl", "rand", "-hex", "3"]).decode().strip()
-print(f"WORKER_ID={worker_id}")
+print(f"AGENT_ID={agent_id}")
 
 # Auto-discover active stampede run
-# Check in-repo .stampede/ first (preferred), then ~/.stampede/, then legacy ~/.copilot/stampede/
+# Check in-repo .stampede/ first (preferred), then legacy ~/.copilot/stampede/
 cwd = os.getcwd()
 candidates = sorted(glob.glob(f"{cwd}/.stampede/run-*/queue/*.json"), reverse=True)
-if not candidates:
-    stampede_dir = os.path.expanduser("~/.stampede")
-    candidates = sorted(glob.glob(f"{stampede_dir}/run-*/queue/*.json"), reverse=True)
 if not candidates:
     stampede_dir = os.path.expanduser("~/.copilot/stampede")
     candidates = sorted(glob.glob(f"{stampede_dir}/run-*/queue/*.json"), reverse=True)
@@ -95,8 +92,8 @@ Write startup log:
 python3 -c '
 import json, time
 entry = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-         "worker_id": "WORKER_ID", "event": "startup"}
-with open("LOGS_DIR/WORKER_ID.jsonl", "a") as f:
+         "agent_id": "AGENT_ID", "event": "startup"}
+with open("LOGS_DIR/AGENT_ID.jsonl", "a") as f:
     f.write(json.dumps(entry) + "\n")
 '
 ```
@@ -109,7 +106,7 @@ Repeat until no tasks remain. Track idle rounds for graceful drain.
 
 ### 1. CLAIM A TASK (Atomic)
 
-Use atomic `os.rename`. If two workers race, only one succeeds. <!-- Landmine #2, #10 -->
+Use atomic `os.rename`. If two agents race, only one succeeds. <!-- Landmine #2, #10 -->
 
 ```python
 python3 -c '
@@ -117,7 +114,7 @@ import os, json, time, glob
 
 queue_dir = "RUN_DIR/queue"
 claimed_dir = "RUN_DIR/claimed"
-worker_id = "WORKER_ID"
+agent_id = "AGENT_ID"
 
 tasks = sorted(glob.glob(f"{queue_dir}/*.json"))
 if not tasks:
@@ -131,7 +128,7 @@ for task_path in tasks:
         os.rename(task_path, claimed_path)
         with open(claimed_path) as f:
             manifest = json.load(f)
-        manifest["claimed_by"] = worker_id
+        manifest["claimed_by"] = agent_id
         manifest["claimed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         with open(claimed_path, "w") as f:
             json.dump(manifest, f, indent=2)
@@ -184,7 +181,7 @@ cd REPO_PATH
 git add -A
 git diff --cached --quiet || git commit -m "stampede(TASK_ID): TITLE
 
-Worker: WORKER_ID
+Agent: AGENT_ID
 Run: RUN_ID
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
@@ -200,12 +197,19 @@ import json, os, time, subprocess
 
 task_id = "TASK_ID"
 run_dir = "RUN_DIR"
-worker_id = "WORKER_ID"
+agent_id = "AGENT_ID"
 repo = "REPO_PATH"
 
 try:
+    branch = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        cwd=repo, stderr=subprocess.DEVNULL).decode().strip()
+except subprocess.CalledProcessError:
+    branch = f"stampede/{task_id}"
+
+try:
     diff = subprocess.check_output(
-        ["git", "diff", "--name-only", "HEAD~1", "HEAD"],
+        ["git", "diff", "--name-only", "main...HEAD"],
         cwd=repo, stderr=subprocess.DEVNULL).decode().strip()
     files_changed = diff.split("\n") if diff else []
 except subprocess.CalledProcessError:
@@ -219,10 +223,10 @@ if len(words) > 500:
 result = {
     "task_id": task_id,
     "run_id": "RUN_ID",
-    "worker_id": worker_id,
+    "agent_id": agent_id,
     "status": "done",
     "generation": GENERATION,
-    "branch": f"stampede/{task_id}",
+    "branch": branch,
     "files_changed": files_changed,
     "summary": summary,
     "word_count": min(len(words), 500),
@@ -263,7 +267,7 @@ import json, os, time
 result = {
     "task_id": "TASK_ID",
     "run_id": "RUN_ID",
-    "worker_id": "WORKER_ID",
+    "agent_id": "AGENT_ID",
     "status": "error",
     "generation": GENERATION,
     "error": "ERROR_MESSAGE",
@@ -292,9 +296,9 @@ if os.path.exists("CLAIMED_DIR/TASK_FILE"):
 python3 -c '
 import json, time
 entry = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-         "worker_id": "WORKER_ID", "event": "shutdown",
+         "agent_id": "AGENT_ID", "event": "shutdown",
          "reason": "queue_empty_drain_expired"}
-with open("LOGS_DIR/WORKER_ID.jsonl", "a") as f:
+with open("LOGS_DIR/AGENT_ID.jsonl", "a") as f:
     f.write(json.dumps(entry) + "\n")
 print("Agent shutting down.")
 '
@@ -304,7 +308,7 @@ print("Agent shutting down.")
 
 ## RECOVERY BEHAVIOR
 
-On restart: new WORKER_ID, same RUN_ID from prompt, ignore others' claims, claim from queue/ only.
+On restart: new AGENT_ID, same RUN_ID from prompt, ignore others' claims, claim from queue/ only.
 
 ## REQUIRED LOG EVENTS
 

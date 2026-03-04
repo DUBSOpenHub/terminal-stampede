@@ -6,7 +6,7 @@ Terminal Stampede is a cross-terminal multi-agent orchestration framework. It sp
 ## Architecture
 Three files:
 - `skills/SKILL.md` — Orchestrator skill (YAML frontmatter + markdown instructions, Copilot CLI format)
-- `agents/stampede-worker.agent.md` — Worker agent (loaded per-session via `--agent`, Copilot CLI format)
+- `agents/stampede-agent.agent.md` — Worker agent (loaded per-session via `--agent`, Copilot CLI format)
 - `bin/stampede.sh` — Bash launcher (tmux session management, PID tracking, CLI-agnostic)
 
 ## Key conventions

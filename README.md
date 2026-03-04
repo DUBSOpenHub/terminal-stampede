@@ -65,7 +65,7 @@ Six files land in their working locations:
 | File | Location | Purpose |
 |------|----------|---------|
 | Orchestrator skill | `~/.copilot/skills/stampede/SKILL.md` | Parses commands, generates tasks, monitors, synthesizes |
-| Worker agent | `~/.copilot/agents/stampede-worker.agent.md` | Claims tasks, does the work, writes results |
+| Worker agent | `~/.copilot/agents/stampede-agent.agent.md` | Claims tasks, does the work, writes results |
 | Merger agent | `~/.copilot/agents/stampede-merger.agent.md` | Auto-merges all branches, resolves conflicts, shadow-scores |
 | Launcher | `~/bin/stampede.sh` | Creates tmux session, spawns panes, tracks PIDs |
 | Monitor | `~/bin/stampede-monitor.sh` | Live progress, stuck detection, runtime stats |
