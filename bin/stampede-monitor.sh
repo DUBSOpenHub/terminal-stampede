@@ -74,35 +74,28 @@ while true; do
     # Agent roster from fleet.json
     if [[ -f "$BASE/fleet.json" ]]; then
         idx=0
+        SESSION_NAME="stampede-${RUN_ID}"
         while IFS= read -r line; do
             [[ "$line" =~ \"(worker-[0-9]+)\" ]] || continue
             wid="${BASH_REMATCH[1]}"
             idx=$((idx + 1))
             model=$(python3 -c "import json; print(json.load(open('$BASE/fleet.json')).get('$wid',{}).get('model','?'))" 2>/dev/null || echo "?")
             
-            # Status: check results, then PID
-            has_result=false
-            for rf in "$BASE/results"/task-*.json; do
-                [[ -f "$rf" ]] || continue
-                rw=$(python3 -c "import json; print(json.load(open('$rf')).get('worker_id',''))" 2>/dev/null || echo "")
-                if [[ "$rw" == "$wid" ]]; then has_result=true; break; fi
-            done
+            # Check tmux pane state — the reliable source of truth
+            pane_cmd=$(tmux list-panes -t "$SESSION_NAME" -F '#{pane_index} #{pane_current_command} #{pane_dead}' 2>/dev/null | awk "\$1==$idx {print \$2, \$3}" || echo "unknown 1")
+            cmd=$(echo "$pane_cmd" | awk '{print $1}')
+            dead=$(echo "$pane_cmd" | awk '{print $2}')
             
-            # Check if tmux pane is still active (more reliable than stored PIDs)
-            SESSION_NAME="stampede-${RUN_ID}"
-            pane_alive=false
-            pane_cmd=$(tmux list-panes -t "$SESSION_NAME" -F '#{pane_index} #{pane_dead}' 2>/dev/null | awk "\$1==$idx {print \$2}" || echo "1")
-            [[ "$pane_cmd" != "1" ]] && pane_alive=true
-            
-            remaining=$((queued + claimed))
-            if $has_result; then
+            if [[ "$dead" == "1" ]]; then
+                ICON="${RD}✕"; WORD="dead"
+            elif [[ "$cmd" == "sleep" ]]; then
                 ICON="${GN}✓"; WORD="done"
-            elif $pane_alive; then
+            elif [[ "$cmd" == "bash" ]] || [[ "$cmd" == "gh" ]] || [[ "$cmd" == "python3" ]] || [[ "$cmd" == "node" ]]; then
                 ICON="${AM}●"; WORD="active"
-            elif [[ $remaining -eq 0 ]]; then
+            elif [[ $done_count -ge $TOTAL_TASKS ]]; then
                 ICON="${GN}✓"; WORD="done"
             else
-                ICON="${RD}✕"; WORD="dead"
+                ICON="${AM}●"; WORD="active"
             fi
             
             printf "${BG}  ${ICON}${R}${BG} ${TX}Agent #${idx}${R}${BG}  ${ICON}${WORD}${R}${BG}  ${G}${model}${R}\n"
@@ -128,21 +121,30 @@ while true; do
     done
     
     # ─── Dead Agent Recovery ─────────────────────────────────────────────────
-    live_agents=0; total_agents=0
-    for pf in "$PIDS_DIR"/*.pid; do
-        [[ -f "$pf" ]] || continue
+    # Use tmux pane status — more reliable than stored PIDs
+    SESSION_NAME="stampede-${RUN_ID}"
+    live_agents=0; total_agents=0; done_agents=0
+    while IFS=' ' read -r pidx pcmd pdead; do
+        [[ "$pidx" == "0" ]] && continue  # skip monitor pane
         total_agents=$((total_agents + 1))
-        pid=$(cat "$pf")
-        kill -0 "$pid" 2>/dev/null && live_agents=$((live_agents + 1))
-    done
+        if [[ "$pdead" == "1" ]]; then
+            : # dead pane
+        elif [[ "$pcmd" == "sleep" ]]; then
+            done_agents=$((done_agents + 1))
+        else
+            live_agents=$((live_agents + 1))
+        fi
+    done < <(tmux list-panes -t "$SESSION_NAME" -F '#{pane_index} #{pane_current_command} #{pane_dead}' 2>/dev/null)
 
-    all_dead=false
-    [[ $total_agents -gt 0 ]] && [[ $live_agents -eq 0 ]] && all_dead=true
+    all_done_or_dead=false
+    [[ $total_agents -gt 0 ]] && [[ $live_agents -eq 0 ]] && all_done_or_dead=true
 
-    if $all_dead && [[ $done_count -lt $TOTAL_TASKS ]] && [[ $queued -eq 0 ]]; then
+    if $all_done_or_dead && [[ $done_count -lt $TOTAL_TASKS ]] && [[ $queued -eq 0 ]] && [[ $claimed -eq 0 ]]; then
         if [[ -z "$ALL_DEAD_SINCE" ]]; then
             ALL_DEAD_SINCE=$(date +%s)
         fi
+    elif $all_done_or_dead && [[ $done_count -ge $TOTAL_TASKS ]]; then
+        : # normal completion, handled below
     else
         ALL_DEAD_SINCE=""
     fi
