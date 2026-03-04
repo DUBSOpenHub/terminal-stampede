@@ -429,23 +429,43 @@ get_worker_model() {
 }
 
 # ─── Build Worker Command ────────────────────────────────────────────────────
-build_worker_cmd() {
+build_worker_script() {
     local worker_num="$1"
     local worker_model
     worker_model=$(get_worker_model "$worker_num")
-    local prompt="You are stampede worker #${worker_num} for run ${RUN_ID}. FOLLOW YOUR AGENT INSTRUCTIONS EXACTLY. Claim ONE task at a time from ${BASE_DIR}/queue/ via atomic mv to ${BASE_DIR}/claimed/. Fully complete each task before claiming the next. Write results atomically to ${BASE_DIR}/results/. Log to ${BASE_DIR}/logs/. Your repo is ${REPO_PATH}. Work until queue is empty then exit."
+    local script="${BASE_DIR}/scripts/agent-${worker_num}.sh"
+    local prompt="You are stampede agent #${worker_num} for run ${RUN_ID}. FOLLOW YOUR AGENT INSTRUCTIONS EXACTLY. Claim ONE task at a time from ${BASE_DIR}/queue/ via atomic mv to ${BASE_DIR}/claimed/. Fully complete each task before claiming the next. Write results atomically to ${BASE_DIR}/results/. Log to ${BASE_DIR}/logs/. Your repo is ${REPO_PATH}. Work until queue is empty then exit."
+
+    cat > "$script" << AGENTEOF
+#!/usr/bin/env bash
+cd ${REPO_PATH}
+echo '⚡ ${worker_model} · Claiming task...'
+AGENTEOF
 
     if [[ -n "$AGENT_CMD" ]]; then
-        # Custom CLI agent command — substitute {prompt} and {model} placeholders
         local cmd="${AGENT_CMD}"
         cmd="${cmd//\{prompt\}/$prompt}"
         cmd="${cmd//\{model\}/$worker_model}"
-        echo "cd ${REPO_PATH} && echo '⚡ ${worker_model} · Claiming task...' && ${cmd}; echo '⚡ Done.'; sleep 86400"
+        echo "$cmd" >> "$script"
     else
-        # Default: GitHub Copilot CLI
-        # --autopilot works with -p (prompt mode); keeps going autonomously
-        echo "cd ${REPO_PATH} && echo '⚡ ${worker_model} · Claiming task...' && gh copilot -- --agent stampede-agent --model ${worker_model} --allow-all-tools --autopilot --max-autopilot-continues 30 --no-ask-user -p \"${prompt}\"; echo '⚡ Done.'; sleep 86400"
+        cat >> "$script" << AGENTEOF
+gh copilot -- \\
+  --agent stampede-agent \\
+  --model ${worker_model} \\
+  --allow-all-tools \\
+  --autopilot \\
+  --max-autopilot-continues 30 \\
+  --no-ask-user \\
+  -p "${prompt}"
+AGENTEOF
     fi
+
+    cat >> "$script" << 'AGENTEOF'
+echo '⚡ Done.'
+sleep 86400
+AGENTEOF
+    chmod +x "$script"
+    echo "$script"
 }
 
 # ─── Create tmux Session with Monitor as pane 0 (top-left) ───────────────────
@@ -500,8 +520,8 @@ MONITOR_CMD="watch -n5 'printf \"\033[1;33m\"; \
      echo; echo \"Updated: \$(date +%H:%M:%S)\"'"
 tmux_create_session "$MONITOR_CMD"
 else
-FIRST_CMD=$(build_worker_cmd 1)
-tmux_create_session "$FIRST_CMD"
+FIRST_SCRIPT=$(build_worker_script 1)
+tmux_create_session "$FIRST_SCRIPT"
 fi
 
 # Add worker panes
@@ -511,8 +531,8 @@ if ! command -v watch &>/dev/null; then
 fi
 
 for ((i = START_INDEX; i <= WORKER_COUNT; i++)); do
-    WORKER_CMD=$(build_worker_cmd "$i")
-    tmux split-window -t "$SESSION_NAME" "$WORKER_CMD"
+    WORKER_SCRIPT=$(build_worker_script "$i")
+    tmux split-window -t "$SESSION_NAME" "$WORKER_SCRIPT"
     tmux select-layout -t "$SESSION_NAME" tiled 2>/dev/null || true
     sleep 1
 done
@@ -549,15 +569,8 @@ done
 
 tmux select-layout -t "$SESSION_NAME" tiled 2>/dev/null || true
 
-# ─── Auto-Autopilot: send Shift+Tab to all worker panes ──────────────────────
-sleep 2
-for ((i = 0; i < WORKER_COUNT + 1; i++)); do
-    # Skip pane 0 if it's the monitor
-    if command -v watch &>/dev/null && [[ "$i" -eq 0 ]]; then
-        continue
-    fi
-    tmux send-keys -t "$SESSION_NAME:0.$i" BTab 2>/dev/null || true
-done
+# ─── Note: --autopilot flag in agent scripts handles autonomous mode ──────────
+# BTab (Shift+Tab) removed — it conflicts with --autopilot flag and kills agents
 
 # ─── PID Capture with Process Tree Walking ────────────────────────────────────
 # Landmine #16: walk process tree to find actual worker PIDs
