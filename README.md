@@ -15,7 +15,9 @@ A parallel agent runtime for your terminal. Up to 20 AI agents. Zero infrastruct
 
 
 <p align="center">
-  <img src="assets/stampede-agents.gif" alt="Animated demonstration of Terminal Stampede showing 8 AI agents working in parallel across separate tmux panes. Each pane displays an agent processing code, reading files, and making git commits independently while coordinated through a filesystem message queue." width="1200" />
+  <video src="https://github.com/user-attachments/assets/2d5f174f-2519-4ac7-a1c4-e81c1d931c76" autoplay loop muted playsinline width="1200" aria-label="Animated demonstration of Terminal Stampede showing 8 AI agents working in parallel across separate tmux panes, each processing code, reading files, and making git commits independently while coordinated through a filesystem message queue">
+    Your browser does not support the video tag.
+  </video>
 </p>
 
 **A parallel agent runtime for your terminal.** Run up to 20 AI coding agents simultaneously, each in its own tmux pane with its own context window and git branch. Works with any CLI agent that can take a prompt and write code. The sweet spot is 6–8 agents (the default is 3; configurable with `--count`).
