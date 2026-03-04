@@ -120,6 +120,19 @@ while true; do
         fi
     done
     
+    # ─── Orphan Recovery ─────────────────────────────────────────────────────
+    # If a claimed task has no result and no live agent is working, return it to queue
+    if [[ $live_agents -eq 0 ]] && [[ $claimed -gt 0 ]]; then
+        for cf in "$BASE/claimed"/task-*.json; do
+            [[ -f "$cf" ]] || continue
+            tid=$(basename "$cf" .json)
+            if [[ ! -f "$BASE/results/${tid}.json" ]]; then
+                mv "$cf" "$BASE/queue/${tid}.json" 2>/dev/null && \
+                    printf "${BG} ${AM}♻ ${tid} returned to queue (agent died)${R}\n"
+            fi
+        done
+    fi
+
     # ─── Dead Agent Recovery ─────────────────────────────────────────────────
     # Use tmux pane status — more reliable than stored PIDs
     SESSION_NAME="stampede-${RUN_ID}"
