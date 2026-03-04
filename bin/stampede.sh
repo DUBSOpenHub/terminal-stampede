@@ -710,7 +710,17 @@ printf "\033[?25h"
 tmux attach -t $SESSION_NAME
 ATTACHEOF
         chmod +x "$ATTACH_SCRIPT"
-        open -a Terminal "$ATTACH_SCRIPT" 2>/dev/null && ATTACHED=true
+        # Open a new Terminal window AND bring it to the foreground
+        osascript -e "
+            tell application \"Terminal\"
+                activate
+                do script \"exec '$ATTACH_SCRIPT'\"
+            end tell
+        " 2>/dev/null && ATTACHED=true
+        # Fallback to open -a if osascript fails
+        if ! $ATTACHED; then
+            open -a Terminal "$ATTACH_SCRIPT" 2>/dev/null && ATTACHED=true
+        fi
     elif command -v gnome-terminal &>/dev/null; then
         gnome-terminal -- tmux attach -t "$SESSION_NAME" 2>/dev/null &
         ATTACHED=true
