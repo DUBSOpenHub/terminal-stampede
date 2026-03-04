@@ -315,9 +315,12 @@ echo ""
 tmux new-session -d -s "$SESSION" -x 120 -y 39 "/tmp/stampede-demo-monitor.sh $WORKERS"
 tmux rename-window -t "$SESSION" "🦬 Stampede Demo"
 
-# Styling
-tmux set-option -t "$SESSION" pane-border-style "fg=colour238"
-tmux set-option -t "$SESSION" pane-active-border-style "fg=colour220"
+# Styling — gold headers matching real runs
+tmux set-option -t "$SESSION" pane-border-style "fg=colour240"
+tmux set-option -t "$SESSION" pane-active-border-style "fg=colour51"
+tmux set-option -t "$SESSION" pane-border-status top 2>/dev/null || true
+tmux set-option -t "$SESSION" pane-border-format \
+    '#[fg=colour214,bold] ⚡ #{pane_title} #[default]' 2>/dev/null || true
 tmux set-option -t "$SESSION" status-style "bg=colour233,fg=colour220"
 tmux set-option -t "$SESSION" status-left " ⚡ DEMO "
 tmux set-option -t "$SESSION" status-right " 🦬 Terminal Stampede "
@@ -338,6 +341,14 @@ EXPECTED=$((WORKERS + 1))
 if [[ $PANE_COUNT -ne $EXPECTED ]]; then
   echo "⚠ Only $PANE_COUNT/$EXPECTED panes created. Terminal may be too small."
 fi
+
+# Set pane titles — monitor + agents
+tmux select-pane -t "$SESSION:0.0" -T "📊 Monitor" 2>/dev/null || true
+DEMO_TASKS=("Audit README" "Review CI" "Check docs" "Scan deps" "Lint config" "Test coverage" "Security scan" "API review" "Schema check" "Perf audit")
+for i in $(seq 1 "$WORKERS"); do
+  task="${DEMO_TASKS[$((i-1))]:-Task $i}"
+  tmux select-pane -t "$SESSION:0.$i" -T "Agent #${i} · claude-haiku-4.5 · ${task}" 2>/dev/null || true
+done
 
 # ─── Apply 2-row grid layout ────────────────────────────────────
 sleep 0.5
