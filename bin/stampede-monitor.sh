@@ -21,6 +21,7 @@ PIDS_DIR="$BASE/pids"
 START_TIME=$(date +%s)
 BELL=$'\a'
 ALERTED=""
+ALL_DEAD_SINCE=""
 
 # Total tasks from state.json or filesystem
 TOTAL_TASKS=0
@@ -35,6 +36,7 @@ fi
 # Colors
 G="\033[38;5;220m"; GN="\033[38;5;46m"; AM="\033[38;5;214m"
 RD="\033[38;5;203m"; MT="\033[38;5;240m"; TX="\033[38;5;252m"
+CY="\033[38;5;51m"
 B="\033[1m"; R="\033[0m"; BG="\033[48;5;233m"
 
 # ─── Main Loop ────────────────────────────────────────────────────────────────
@@ -125,8 +127,40 @@ while true; do
         fi
     done
     
+    # ─── Dead Agent Recovery ─────────────────────────────────────────────────
+    live_agents=0; total_agents=0
+    for pf in "$PIDS_DIR"/*.pid; do
+        [[ -f "$pf" ]] || continue
+        total_agents=$((total_agents + 1))
+        pid=$(cat "$pf")
+        kill -0 "$pid" 2>/dev/null && live_agents=$((live_agents + 1))
+    done
+
+    all_dead=false
+    [[ $total_agents -gt 0 ]] && [[ $live_agents -eq 0 ]] && all_dead=true
+
+    if $all_dead && [[ $done_count -lt $TOTAL_TASKS ]] && [[ $queued -eq 0 ]]; then
+        if [[ -z "$ALL_DEAD_SINCE" ]]; then
+            ALL_DEAD_SINCE=$(date +%s)
+        fi
+    else
+        ALL_DEAD_SINCE=""
+    fi
+
     # ─── Completion ───────────────────────────────────────────────────────────
+    is_complete=false; partial=false
     if [[ $done_count -ge $TOTAL_TASKS ]] && [[ $TOTAL_TASKS -gt 0 ]]; then
+        is_complete=true
+    elif [[ -n "$ALL_DEAD_SINCE" ]]; then
+        grace=$(( $(date +%s) - ALL_DEAD_SINCE ))
+        if [[ $grace -ge 15 ]] && [[ $done_count -gt 0 ]]; then
+            is_complete=true; partial=true
+        else
+            printf "${BG} ${RD}⚠ All agents dead — completing in $((15 - grace))s${R}\n"
+        fi
+    fi
+
+    if $is_complete; then
         # Finalize runtime stats
         python3 -c "
 import json, os, time
@@ -152,22 +186,62 @@ except: pass
         
         clear
         echo ""
-        printf "  ${GN}${B}🎉 STAMPEDE COMPLETE${R}  ${MT}${done_count}/${TOTAL_TASKS} tasks · ${MINS}m${SECS}s${R}\n\n"
+        if $partial; then
+            printf "  ${AM}${B}⚡ STAMPEDE PARTIAL${R}  ${MT}${done_count}/${TOTAL_TASKS} tasks · ${MINS}m${SECS}s · some agents died${R}\n\n"
+        else
+            printf "  ${GN}${B}🎉 STAMPEDE COMPLETE${R}  ${MT}${done_count}/${TOTAL_TASKS} tasks · ${MINS}m${SECS}s${R}\n\n"
+        fi
         
         for rf in "$BASE/results"/task-*.json; do
             [ -f "$rf" ] || continue
             tid=$(python3 -c "import json; print(json.load(open('$rf')).get('task_id','?'))" 2>/dev/null || echo "?")
             status=$(python3 -c "import json; print(json.load(open('$rf')).get('status','?'))" 2>/dev/null || echo "?")
             branch=$(python3 -c "import json; print(json.load(open('$rf')).get('branch',''))" 2>/dev/null || echo "")
+            title=$(python3 -c "import json; r=json.load(open('$rf')); print(r.get('title', r.get('summary','')[:60]))" 2>/dev/null || echo "")
+            files=$(python3 -c "import json; r=json.load(open('$rf')); print(', '.join(r.get('files_changed',[])))" 2>/dev/null || echo "")
             if [[ "$status" == "done" ]]; then
-                printf "    ${GN}✅${R} ${TX}${tid}${R}  ${MT}→ ${branch}${R}\n"
+                printf "    ${GN}✅${R} ${TX}${tid}: ${title}${R}  ${MT}→ ${branch}${R}\n"
+                [[ -n "$files" ]] && printf "       ${MT}${files}${R}\n"
             else
-                printf "    ${RD}❌${R} ${TX}${tid} — ${status}${R}\n"
+                printf "    ${RD}❌${R} ${TX}${tid}: ${title} — ${status}${R}\n"
             fi
         done
         
+        # Show missing tasks (agents died before finishing)
+        if $partial; then
+            for i in $(seq 1 $TOTAL_TASKS); do
+                tid=$(printf "task-%03d" "$i")
+                [[ -f "$BASE/results/${tid}.json" ]] && continue
+                printf "    ${RD}💀${R} ${TX}${tid}: agent died — no result${R}\n"
+            done
+        fi
+
+        # Merge prompt with bison box
+        REPO_PATH=$(python3 -c "import json; print(json.load(open('$BASE/state.json')).get('repo_path',''))" 2>/dev/null || echo "")
+        if [[ -n "$REPO_PATH" ]] && [[ -x "$HOME/bin/stampede-merge.sh" ]]; then
+            echo ""
+            echo ""
+            printf "  ${B}${CY}╭─────────────────────────────────────────────────╮${R}\n"
+            printf "  ${B}${CY}│                                                 │${R}\n"
+            printf "  ${B}${CY}│  🦬 Auto-merge + shadow score all branches?     │${R}\n"
+            printf "  ${B}${CY}│                                                 │${R}\n"
+            printf "  ${B}${CY}╰─────────────────────────────────────────────────╯${R}\n"
+            echo ""
+            printf "  ${B}${TX}  Press Y to merge, N to skip:${R} "
+            read -t 60 -n 1 answer 2>/dev/null || answer="y"
+            echo ""
+            if [[ "$answer" != "n" ]] && [[ "$answer" != "N" ]]; then
+                echo ""
+                "$HOME/bin/stampede-merge.sh" --run-id "${RUN_ID}" --repo "${REPO_PATH}" 2>&1
+            else
+                echo ""
+                printf "  ${MT}To merge later:${R}\n"
+                printf "  ${TX}stampede-merge.sh --run-id ${RUN_ID} --repo ${REPO_PATH}${R}\n"
+                printf "  ${MT}Branches are waiting on the repo — nothing was lost.${R}\n"
+            fi
+        fi
+        
         echo ""
-        printf "  ${G}Go back to your CLI session for shadow scores and auto-merge.${R}\n\n"
         printf "  ${MT}Press any key to close. Auto-closes in 60s.${R}\n"
         
         read -t 60 -n 1 2>/dev/null || true
