@@ -367,8 +367,6 @@ Built during a [Havoc Hackathon](https://github.com/DUBSOpenHub/havoc-hackathon)
 
 ---
 
-## 🐙 Built with Love
+## 🐙 Created with 💜 by [@DUBSOpenHub](https://github.com/DUBSOpenHub) with the [GitHub Copilot CLI](https://docs.github.com/copilot/concepts/agents/about-copilot-cli).
 
-Created with 💜 by [DUBSOpenHub](https://github.com/DUBSOpenHub). Works with any CLI coding agent.
-
-**Let's build!** 🚀✨
+Let's build! 🚀✨
