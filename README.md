@@ -4,12 +4,26 @@ A parallel agent runtime for your terminal. Up to 20 AI agents. Zero infrastruct
 
 [![Latest Release](https://img.shields.io/github/v/release/DUBSOpenHub/terminal-stampede?label=latest&color=gold)](https://github.com/DUBSOpenHub/terminal-stampede/releases/latest)
 
-> 🦬 **Try the demo — no setup required!**
+> ### ⚡ One Command. That’s It.
+>
+> **Never used the CLI before? No problem.** Follow these 3 steps:
+>
+> **1. Open your terminal**
+> - 🍎 **Mac:** Press `⌘ + Space`, type **Terminal**, hit Enter
+> - 🪩 **Windows:** Press `Win + X`, choose **Terminal** or **PowerShell**
+> - 🐧 **Linux:** Press `Ctrl + Alt + T`
+>
+> **2. Paste this line and press Enter:**
 > ```bash
-> git clone https://github.com/DUBSOpenHub/terminal-stampede.git
-> cd terminal-stampede && ./install.sh
+> curl -fsSL https://raw.githubusercontent.com/DUBSOpenHub/terminal-stampede/main/quickstart.sh | bash
 > ```
-> Zero API calls. Just `tmux` and `bash`. See agents work in real time.
+> *Already have the CLI? No worries — this detects it and skips straight to adding the skill.*
+>
+> **3. When Copilot opens, type:** `stampede`
+>
+> That’s it — unleash the herd! ⚡
+>
+> *Requires an active [Copilot subscription](https://github.com/features/copilot/plans). [Get one here →](https://github.com/features/copilot/plans)*
 >
 > <img width="661" height="263" alt="Screenshot 2026-03-02 at 11 38 03 PM" src="https://github.com/user-attachments/assets/51036365-4b51-4568-bccd-db5e68665deb" />
 
