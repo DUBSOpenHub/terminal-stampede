@@ -429,6 +429,13 @@ get_worker_model() {
 }
 
 # ─── Build Worker Command ────────────────────────────────────────────────────
+# Escape arbitrary text as a single-quoted bash word (safe to embed in a command line).
+shell_escape_squote() {
+    local s="$1"
+    s=${s//\'/\'"\'"\'}
+    printf "'%s'" "$s"
+}
+
 build_worker_script() {
     local worker_num="$1"
     local worker_model
@@ -438,20 +445,31 @@ build_worker_script() {
 
     cat > "$script" << AGENTEOF
 #!/usr/bin/env bash
-cd ${REPO_PATH}
+set -euo pipefail
+cd "${REPO_PATH}"
 echo '⚡ ${worker_model} · Claiming task...'
 AGENTEOF
 
     if [[ -n "$AGENT_CMD" ]]; then
-        local cmd="${AGENT_CMD}"
-        cmd="${cmd//\{prompt\}/$prompt}"
-        cmd="${cmd//\{model\}/$worker_model}"
-        echo "$cmd" >> "$script"
+        local prompt_q model_q cmd
+        prompt_q=$(shell_escape_squote "$prompt")
+        model_q=$(shell_escape_squote "$worker_model")
+
+        cmd="$AGENT_CMD"
+        # Support placeholders used as bare tokens or wrapped in quotes.
+        cmd="${cmd//\"{prompt}\"/$prompt_q}"
+        cmd="${cmd//\'{prompt}\'/$prompt_q}"
+        cmd="${cmd//\{prompt\}/$prompt_q}"
+        cmd="${cmd//\"{model}\"/$model_q}"
+        cmd="${cmd//\'{model}\'/$model_q}"
+        cmd="${cmd//\{model\}/$model_q}"
+
+        printf '%s\n' "$cmd" >> "$script"
     else
         cat >> "$script" << AGENTEOF
 gh copilot -- \\
   --agent stampede-agent \\
-  --model ${worker_model} \\
+  --model "${worker_model}" \\
   --allow-all-tools \\
   --autopilot \\
   --max-autopilot-continues 30 \\
@@ -485,7 +503,7 @@ MONITOR_CMD="watch -n5 'printf \"\033[1;33m\"; \
      echo \"╔══════════════════════════════════════════════════════╗\"; \
      echo \"║  📊 STAMPEDE MONITOR                                ║\"; \
      echo \"║  🏷️  RUN: ${RUN_ID}                  ║\"; \
-     echo \"║  📂 REPO: $(basename ${REPO_PATH})                                ║\"; \
+     echo \"║  📂 REPO: $(basename -- \"${REPO_PATH}\")                                ║\"; \
      echo \"╚══════════════════════════════════════════════════════╝\"; \
      printf \"\033[0m\"; echo; \
      echo \"📋 Queued:  \$(find ${BASE_DIR}/queue -name *.json -type f 2>/dev/null | wc -l | tr -d \" \")\"; \
@@ -672,7 +690,7 @@ ART
 printf "\${R}"
 sleep 1
 
-printf "\n  \${B}\${TX}🦬 ${WORKER_COUNT} agents · ${TASK_COUNT} tasks · $(basename ${REPO_PATH})\${R}\n\n"
+printf "\n  \${B}\${TX}🦬 ${WORKER_COUNT} agents · ${TASK_COUNT} tasks · $(basename -- "${REPO_PATH}")\${R}\n\n"
 sleep 0.5
 
 if [[ -f "$TASK_FILE" ]] && [[ -s "$TASK_FILE" ]]; then
